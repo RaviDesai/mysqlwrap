@@ -76,6 +76,45 @@ void TestDatabase::Test2() {
 
 void TestDatabase::Test3() {
 	cout << "in test3" << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		UTASSERT(db.IsConnected());	
+
+		Statement stmt(db, "SELECT * from COUNTRY where country_id = ?");
+		stmt << Nullable<short int>(7) << execute;
+
+		short int testId = 6;
+		std::string lastCountry;
+		
+		while (stmt.FetchNextRow()) {
+			testId++;
+			Nullable<short int> countryId = stmt.GetShortDataInRow(0);
+			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
+			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+
+			UTASSERT(testId == (*countryId));	
+			UTASSERT(lastUpdate->year == 2006);
+			UTASSERT(lastUpdate->month == 2);
+			UTASSERT(lastUpdate->day == 15);
+			
+			if (testId > 1) {
+				UTASSERT(countryName.deref() > lastCountry);
+			}
+			lastCountry = countryName.deref();
+		}
+
+		UTASSERT(testId == 7);
+
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
 }
 
 void TestDatabase::Test4() {

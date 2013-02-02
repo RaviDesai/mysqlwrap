@@ -45,7 +45,6 @@ public:
 	Nullable<std::string> GetStringDataInRow(unsigned int column);
 	Nullable<Binary> GetBinaryDataInRow(unsigned int column);
 
-	//template<class T> Statement &operator<<(const Nullable<T> &param);
 	//template<class T> Statement &operator>>(Nullable<T> &value);
 private:
 	void AssignNextParameter(ParamBuffer *buffer);
@@ -72,3 +71,8 @@ private:
 
 Statement &operator<<(Statement &stmt, const ExecuteSentinel&);
 Statement &operator<<(Statement &stmt, const FetchSentinel&);
+
+template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &param) {
+	stmt.AssignNextParameter(param);
+	return stmt;
+}
