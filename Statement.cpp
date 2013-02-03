@@ -10,6 +10,7 @@ Statement::Statement(Database &db, const std::string &sqlStatement) {
 	_dbcopy = db._db;
 	_resultWasStored = false;
 	_eof = true;
+	_currentColumn = 0;
 
 	Prepare();
 }
@@ -19,6 +20,7 @@ Statement::Statement(const Statement &copy) {
 	_dbcopy = copy._dbcopy;
 	_resultWasStored = false;
 	_eof = true;
+	_currentColumn = 0;
 
 	Prepare();
 }
@@ -215,6 +217,7 @@ void Statement::AssignNextParameter(const Nullable<char> &data) {
 void Statement::Execute() {
 	_numberAffectedRows = 0;
 	_eof = true;
+	_currentColumn = 0;
 
 	if (ParameterCount() != _params.size()) {
 		throw DatabaseException("Error in Statement::Execute", 0, "----", "Have not yet assigned all parameters");
@@ -294,6 +297,7 @@ bool Statement::Eof() {
 }
 
 bool Statement::FetchNextRow() { 
+	_currentColumn = 0;
 	bool ret = true;
 	int result = mysql_stmt_fetch(_stmt);
 	if (result == 1) {
@@ -428,8 +432,14 @@ unsigned long long Statement::NumberOfAffectedRows() {
 	return _numberAffectedRows;
 }
 
-bool Statement::operator!() {
-	return Eof();
+Statement::operator bool() {
+	return ! Eof();
+}
+
+int Statement::GetNextDataColumn() {
+	int result = _currentColumn;
+	_currentColumn++;
+	return result;
 }
 
 ExecuteSentinel::ExecuteSentinel() {}

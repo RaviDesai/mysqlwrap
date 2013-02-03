@@ -37,7 +37,7 @@ public:
 	bool FetchNextRow();
 	bool Eof();
 	unsigned long long NumberOfAffectedRows();
-	bool operator!();
+	operator bool();
 
 	Nullable<char> GetTinyDataInRow(unsigned int column);
 	Nullable<short int> GetShortDataInRow(unsigned int column);
@@ -45,6 +45,11 @@ public:
 	Nullable<std::string> GetStringDataInRow(unsigned int column);
 	Nullable<Binary> GetBinaryDataInRow(unsigned int column);
 
+
+	template <class X> Statement &operator>>(Nullable<X> &data) {
+		GetDataInRow(GetNextDataColumn(), data);
+		return *this;
+	}
 protected:
 	void GetDataInRow(unsigned int column, Nullable<std::string> &data);
 	void GetDataInRow(unsigned int column, Nullable<char> &data);
@@ -53,6 +58,8 @@ protected:
 	void GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &data);
 	void GetDataInRow(unsigned int column, Nullable<Binary> &data);
 
+	int GetNextDataColumn();
+
 private:
 	void AssignNextParameter(ParamBuffer *buffer);
 	void Prepare();
@@ -60,6 +67,7 @@ private:
 	void ClearResults();
 
 	unsigned int _numberResultColumns;
+	unsigned int _currentColumn;
 	bool _hasBlobField;
 	my_ulonglong _numberAffectedRows;
 
@@ -83,8 +91,3 @@ template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &par
 	stmt.AssignNextParameter(param);
 	return stmt;
 }
-
-//template <class X> Statement &operator>>(Statement &stmt, Nullable<X> &data) {
-//	stmt.GetNextDataInRow(data);
-//	return stmt;
-//}

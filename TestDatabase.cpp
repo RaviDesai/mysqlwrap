@@ -8,6 +8,9 @@
 #include "DatabaseException.h"
 #include "Statement.h"
 
+#include <fstream>
+#include <sys/stat.h>
+
 using namespace std;
 
 TestDatabase::TestDatabase() {}
@@ -90,11 +93,13 @@ void TestDatabase::Test3() {
 		short int testId = 6;
 		std::string lastCountry;
 		
-		while (stmt.FetchNextRow()) {
+		while (stmt << fetch) {
 			testId++;
-			Nullable<short int> countryId = stmt.GetShortDataInRow(0);
-			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
-			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+			Nullable<short int> countryId;
+			Nullable<std::string> countryName;
+			Nullable<MYSQL_TIME> lastUpdate;
+
+			stmt >> countryId >> countryName >> lastUpdate;
 
 			UTASSERT(testId == (*countryId));	
 			UTASSERT(lastUpdate->year == 2006);
@@ -119,6 +124,39 @@ void TestDatabase::Test3() {
 
 void TestDatabase::Test4() {
 	cout << "in test4" << endl;
+	bool caught = false;
+
+	struct stat filestat;
+	UTASSERT(stat("mike.jpg", &filestat) == 0);
+
+	ifstream myFile("pic.jpg", ios::in | ios::binary);
+	myFile.exceptions(std::ios::failbit);
+	unsigned char *picBuf = (unsigned char *) malloc(filestat.st_size);
+	myFile.read((char *)picBuf, filestat.st_size);
+	myFile.close();
+
+	Binary picFromDisk(picBuf, filestat.st_size, filestat.st_size);
+
+	try {
+		Database db("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+		Statement stmt(db, "select picture from staff where first_name = ?");
+		stmt << Nullable<std::string>("Mike") << execute;
+
+		UTASSERT(stmt << fetch);
+	
+		Nullable<Binary> mikepic;
+		stmt >> mikepic;
+
+		UTASSERT(mikepic.HasValue());
+		UTASSERT(mikepic->BufferLength() == 36365);
+		UTASSERT((mikepic.const_deref()) == picFromDisk);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		caught = true;
+	}
+
+	UTASSERT(! caught);
 }
 
 void TestDatabase::Test5() {
