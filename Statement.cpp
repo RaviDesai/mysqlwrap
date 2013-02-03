@@ -309,8 +309,7 @@ bool Statement::FetchNextRow() {
 	return ret;
 }
 
-Nullable<char> Statement::GetTinyDataInRow(unsigned int column) {
-	Nullable<char> result;
+void Statement::GetDataInRow(unsigned int column, Nullable<char> &result) {
 	if (column >= _resultParams.size()) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
@@ -321,14 +320,18 @@ Nullable<char> Statement::GetTinyDataInRow(unsigned int column) {
 	
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = *((char *) _resultParams[column]->Buffer());
+	} else {
+		result.ClearValue();
 	}
+}
 
+Nullable<char> Statement::GetTinyDataInRow(unsigned int column) {
+	Nullable<char> result;
+	GetDataInRow(column, result);
 	return result;
 }
 
-Nullable<short int> Statement::GetShortDataInRow(unsigned int column) {
-	Nullable<short int> result;
-
+void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 	if (column >= _resultParams.size()) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
@@ -339,14 +342,18 @@ Nullable<short int> Statement::GetShortDataInRow(unsigned int column) {
 	
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = *((short int *) _resultParams[column]->Buffer());
+	} else {
+		result.ClearValue();
 	}
+}
 
+Nullable<short int> Statement::GetShortDataInRow(unsigned int column) {
+	Nullable<short int> result;
+	GetDataInRow(column, result);
 	return result;
 }
 
-Nullable<std::string> Statement::GetStringDataInRow(unsigned int column) { 
-	Nullable<std::string> result;
-
+void Statement::GetDataInRow(unsigned int column, Nullable<std::string> &result) {
 	if (column >= _resultParams.size()) { 
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
@@ -357,14 +364,18 @@ Nullable<std::string> Statement::GetStringDataInRow(unsigned int column) {
 	
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = std::string((const char *) _resultParams[column]->Buffer(), *(_resultParams[column]->BufferLength()));
+	} else {
+		result.ClearValue();
 	}
+}
 
+Nullable<std::string> Statement::GetStringDataInRow(unsigned int column) { 
+	Nullable<std::string> result;
+	GetDataInRow(column, result);
 	return result;
 }
 
-Nullable<MYSQL_TIME> Statement::GetTimeDataInRow(unsigned int column) {
-	Nullable<MYSQL_TIME> result;
-
+void Statement::GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &result) {
 	if (column >= _resultParams.size()) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
@@ -375,13 +386,18 @@ Nullable<MYSQL_TIME> Statement::GetTimeDataInRow(unsigned int column) {
 
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = *((MYSQL_TIME *) _resultParams[column]->Buffer());
+	} else {
+		result.ClearValue();
 	}
+}
+
+Nullable<MYSQL_TIME> Statement::GetTimeDataInRow(unsigned int column) {
+	Nullable<MYSQL_TIME> result;
+	GetDataInRow(column, result);
 	return result;
 }
 
-Nullable<Binary> Statement::GetBinaryDataInRow(unsigned int column) {
-	Nullable<Binary> result;
-
+void Statement::GetDataInRow(unsigned int column, Nullable<Binary> &result) {
 	if (column >= _resultParams.size()) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
@@ -397,8 +413,14 @@ Nullable<Binary> Statement::GetBinaryDataInRow(unsigned int column) {
 		Binary fromdb;
 		fromdb.AssignDataToBuffer((unsigned char *)_resultParams[column]->Buffer(), *(_resultParams[column]->BufferLength()));
 		result = fromdb;
+	} else {
+		result.ClearValue();
 	}
+}
 
+Nullable<Binary> Statement::GetBinaryDataInRow(unsigned int column) {
+	Nullable<Binary> result;
+	GetDataInRow(column, result);
 	return result;
 }
 

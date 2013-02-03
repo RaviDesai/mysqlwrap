@@ -45,7 +45,14 @@ public:
 	Nullable<std::string> GetStringDataInRow(unsigned int column);
 	Nullable<Binary> GetBinaryDataInRow(unsigned int column);
 
-	//template<class T> Statement &operator>>(Nullable<T> &value);
+protected:
+	void GetDataInRow(unsigned int column, Nullable<std::string> &data);
+	void GetDataInRow(unsigned int column, Nullable<char> &data);
+	void GetDataInRow(unsigned int column, Nullable<short int> &data);
+	void GetDataInRow(unsigned int column, Nullable<unsigned long> &data);
+	void GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &data);
+	void GetDataInRow(unsigned int column, Nullable<Binary> &data);
+
 private:
 	void AssignNextParameter(ParamBuffer *buffer);
 	void Prepare();
@@ -76,3 +83,8 @@ template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &par
 	stmt.AssignNextParameter(param);
 	return stmt;
 }
+
+//template <class X> Statement &operator>>(Statement &stmt, Nullable<X> &data) {
+//	stmt.GetNextDataInRow(data);
+//	return stmt;
+//}
