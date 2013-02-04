@@ -27,8 +27,10 @@ public:
 	unsigned long ParameterCount();
 	void AssignNextParameter(const Nullable<std::string> &param);
 	void AssignNextParameter(const Nullable<char> &param);
+	void AssignNextParameter(const Nullable<unsigned char> &param);
 	void AssignNextParameter(const Nullable<short int> &param);
-	void AssignNextParameter(const Nullable<unsigned long> &param);
+	void AssignNextParameter(const Nullable<unsigned short int> &param);
+	void AssignNextParameter(const Nullable<unsigned int> &param);
 	void AssignNextParameter(const Nullable<MYSQL_TIME> &param);
 	void AssignNextParameter(const Nullable<Binary> &data);
 
@@ -40,7 +42,9 @@ public:
 	operator bool();
 
 	Nullable<char> GetTinyDataInRow(unsigned int column);
+	Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
 	Nullable<short int> GetShortDataInRow(unsigned int column);
+	Nullable<unsigned short int> GetUShortDataInRow(unsigned int column);
 	Nullable<MYSQL_TIME> GetTimeDataInRow(unsigned int column);
 	Nullable<std::string> GetStringDataInRow(unsigned int column);
 	Nullable<Binary> GetBinaryDataInRow(unsigned int column);
@@ -53,7 +57,9 @@ public:
 protected:
 	void GetDataInRow(unsigned int column, Nullable<std::string> &data);
 	void GetDataInRow(unsigned int column, Nullable<char> &data);
+	void GetDataInRow(unsigned int column, Nullable<unsigned char> &data);
 	void GetDataInRow(unsigned int column, Nullable<short int> &data);
+	void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
 	void GetDataInRow(unsigned int column, Nullable<unsigned long> &data);
 	void GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &data);
 	void GetDataInRow(unsigned int column, Nullable<Binary> &data);

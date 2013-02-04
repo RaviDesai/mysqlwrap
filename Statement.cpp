@@ -73,15 +73,34 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].is_null = buffer->IsNull();
 		}
 		else if (field->type == MYSQL_TYPE_TINY) {
-			buffer = new ParamBuffer((char) 0);
+			if ((field->flags & UNSIGNED_FLAG) != 0) {
+				buffer = new ParamBuffer((const unsigned char) 0);
+			} else {
+				buffer = new ParamBuffer((const char) 0);
+			}
 			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_TINY;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
 		}
 		else if (field->type == MYSQL_TYPE_SHORT) {
-			buffer = new ParamBuffer((short int) 0);
+			if ((field->flags & UNSIGNED_FLAG) != 0) {
+				buffer = new ParamBuffer((const unsigned short int) 0);
+			} else {
+				buffer = new ParamBuffer((const short int) 0);
+			}
 			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_SHORT;
+			_resultBind[fieldPos].buffer = buffer->Buffer();
+			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].is_null = buffer->IsNull();
+		}
+		else if (field->type == MYSQL_TYPE_LONG) {
+			if ((field->flags & UNSIGNED_FLAG) != 0) {
+				buffer = new ParamBuffer((const unsigned int) 0);
+			} else {
+				buffer = new ParamBuffer((const int) 0);
+			}
+			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_LONG;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
@@ -168,7 +187,7 @@ void Statement::AssignNextParameter(ParamBuffer *buffer) {
 
 void Statement::AssignNextParameter(const Nullable<std::string> &str) { 
 	if (! str.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_STRING));
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_STRING, false));
 	} else {
 		AssignNextParameter(new ParamBuffer(*str, str->length()));
 	}
@@ -176,23 +195,31 @@ void Statement::AssignNextParameter(const Nullable<std::string> &str) {
 
 void Statement::AssignNextParameter(const Nullable<short int> &i) {
 	if (! i.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_SHORT));
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_SHORT, false));
 	} else {
 		AssignNextParameter(new ParamBuffer(*i));
 	}	
 }
 
-void Statement::AssignNextParameter(const Nullable<unsigned long> &l) {
-	if (! l.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_LONG));
+void Statement::AssignNextParameter(const Nullable<unsigned short int> &i) {
+	if (! i.HasValue()) {
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_SHORT, true));
 	} else {
-		AssignNextParameter(new ParamBuffer(*l));
+		AssignNextParameter(new ParamBuffer(*i));
+	}	
+}
+
+void Statement::AssignNextParameter(const Nullable<unsigned int> &i) {
+	if (! i.HasValue()) {
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_LONG, false));
+	} else {
+		AssignNextParameter(new ParamBuffer(*i));
 	}
 }
 
 void Statement::AssignNextParameter(const Nullable<MYSQL_TIME> &tm) {
 	if (! tm.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_TIME));
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_TIME, false));
 	} else {
 		AssignNextParameter(new ParamBuffer(*tm));
 	}
@@ -200,7 +227,7 @@ void Statement::AssignNextParameter(const Nullable<MYSQL_TIME> &tm) {
 
 void Statement::AssignNextParameter(const Nullable<Binary> &data) {
 	if (! data.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_BLOB));
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_BLOB, false));
 	} else {
 		AssignNextParameter(new ParamBuffer(data.const_deref()));
 	}
@@ -208,7 +235,15 @@ void Statement::AssignNextParameter(const Nullable<Binary> &data) {
 
 void Statement::AssignNextParameter(const Nullable<char> &data) {
 	if (! data.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_TINY));
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_TINY, false));
+	} else {
+		AssignNextParameter(new ParamBuffer(*data));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<unsigned char> &data) {
+	if (! data.HasValue()) {
+		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_TINY, true));
 	} else {
 		AssignNextParameter(new ParamBuffer(*data));
 	}
@@ -321,7 +356,31 @@ void Statement::GetDataInRow(unsigned int column, Nullable<char> &result) {
 	if (_resultBind[column].buffer_type != MYSQL_TYPE_TINY) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
 	}
-	
+
+	if (_resultBind[column].is_unsigned) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column is an unsigned data type");
+	}
+
+	if (! (*(_resultParams[column]->IsNull()))) {
+		result = *((char *) _resultParams[column]->Buffer());
+	} else {
+		result.ClearValue();
+	}
+}
+
+void Statement::GetDataInRow(unsigned int column, Nullable<unsigned char> &result) {
+	if (column >= _resultParams.size()) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
+	}
+
+	if (_resultBind[column].buffer_type != MYSQL_TYPE_TINY) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
+	}
+
+	if (! _resultBind[column].is_unsigned) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column is not an unsigned data type");
+	}
+
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = *((char *) _resultParams[column]->Buffer());
 	} else {
@@ -335,6 +394,12 @@ Nullable<char> Statement::GetTinyDataInRow(unsigned int column) {
 	return result;
 }
 
+Nullable<unsigned char> Statement::GetUTinyDataInRow(unsigned int column) {
+	Nullable<unsigned char> result;
+	GetDataInRow(column, result);
+	return result;
+}
+
 void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 	if (column >= _resultParams.size()) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
@@ -344,6 +409,30 @@ void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
 	}
 	
+	if (_resultBind[column].is_unsigned) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column is an unsigned data type");
+	}
+
+	if (! (*(_resultParams[column]->IsNull()))) {
+		result = *((short int *) _resultParams[column]->Buffer());
+	} else {
+		result.ClearValue();
+	}
+}
+
+void Statement::GetDataInRow(unsigned int column, Nullable<unsigned short int> &result) {
+	if (column >= _resultParams.size()) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
+	}
+
+	if (_resultBind[column].buffer_type != MYSQL_TYPE_SHORT) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
+	}
+	
+	if (! _resultBind[column].is_unsigned) {
+		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column is not an unsigned data type");
+	}
+
 	if (! (*(_resultParams[column]->IsNull()))) {
 		result = *((short int *) _resultParams[column]->Buffer());
 	} else {
@@ -353,6 +442,12 @@ void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 
 Nullable<short int> Statement::GetShortDataInRow(unsigned int column) {
 	Nullable<short int> result;
+	GetDataInRow(column, result);
+	return result;
+}
+
+Nullable<unsigned short int> Statement::GetUShortDataInRow(unsigned int column) {
+	Nullable<unsigned short int> result;
 	GetDataInRow(column, result);
 	return result;
 }

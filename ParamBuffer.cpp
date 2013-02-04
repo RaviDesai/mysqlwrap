@@ -4,12 +4,13 @@
 #include <iostream>
 using namespace std;
 
-ParamBuffer::ParamBuffer(enum_field_types type) {
+ParamBuffer::ParamBuffer(enum_field_types type, my_bool isUnsigned) {
 	_type = type;
 	_buffer = NULL;
 	_bufferSize = 0;
 	_bufferLength = 0;
 	_isNull = 1;
+	_isUnsigned = isUnsigned;
 }
 
 ParamBuffer::ParamBuffer(const std::string &str, size_t maxSize) {
@@ -60,6 +61,20 @@ ParamBuffer::ParamBuffer(const char ch) {
 	_bufferLength = _bufferSize;
 	_type = MYSQL_TYPE_TINY;
 	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 0;
+
+	*((char *)_buffer) = ch;
+}
+
+ParamBuffer::ParamBuffer(const unsigned char ch) {
+	_bufferSize = sizeof (char);
+	_buffer = malloc(_bufferSize);
+	_bufferLength = _bufferSize;
+	_type = MYSQL_TYPE_TINY;
+	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 1;
 
 	*((char *)_buffer) = ch;
 }
@@ -70,6 +85,20 @@ ParamBuffer::ParamBuffer(const short int i) {
 	_bufferLength = _bufferSize;
 	_type = MYSQL_TYPE_SHORT;
 	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 0;
+
+	*((short int *)_buffer) = i;
+}
+
+ParamBuffer::ParamBuffer(const unsigned short int i) {
+	_buffer = malloc(sizeof(short int));
+	_bufferSize = sizeof (short int);
+	_bufferLength = _bufferSize;
+	_type = MYSQL_TYPE_SHORT;
+	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 1;
 
 	*((short int *)_buffer) = i;
 }
@@ -80,18 +109,22 @@ ParamBuffer::ParamBuffer(const int i) {
 	_bufferLength = sizeof(int);
 	_type = MYSQL_TYPE_LONG;
 	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 0;
 
  	*((int *)_buffer) = i;
 }
 
-ParamBuffer::ParamBuffer(const unsigned long l) {
-	_buffer = malloc(sizeof(unsigned long));
-	_bufferSize = sizeof(unsigned long);
+ParamBuffer::ParamBuffer(const unsigned int i) {
+	_buffer = malloc(sizeof(unsigned int));
+	_bufferSize = sizeof(unsigned int);
 	_bufferLength = _bufferSize;
 	_type = MYSQL_TYPE_LONG;
 	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 1;
 
-	*((unsigned long *)_buffer) = l;
+	*((unsigned long *)_buffer) = i;
 }
 
 ParamBuffer::ParamBuffer(const MYSQL_TIME &tm) {
@@ -135,4 +168,12 @@ void ParamBuffer::ResizeBlob(size_t newSize) {
 		_bufferSize = newSize;
 		_bufferLength = 0;
 	}
+}
+
+my_bool ParamBuffer::IsUnsigned() {
+	return _isUnsigned;
+}
+
+my_bool *ParamBuffer::IsTruncated() {
+	return &_isTruncated;
 }
