@@ -2,6 +2,7 @@
 #include "DatabaseException.h"
 #include <iostream>
 #include <typeinfo>
+#include <iomanip>
 
 using namespace std;
 
@@ -105,19 +106,25 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
 		}
-		else if (field->type == MYSQL_TYPE_TIMESTAMP) {
+		else if ((field->type == MYSQL_TYPE_TIMESTAMP) ||
+			 (field->type == MYSQL_TYPE_DATE) ||
+			 (field->type == MYSQL_TYPE_TIME) ||
+			 (field->type == MYSQL_TYPE_DATETIME)) {
 			MYSQL_TIME time;
 			buffer = new ParamBuffer(time);
-			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_TIMESTAMP;	
+			_resultBind[fieldPos].buffer_type = field->type;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
 		}
-		else if (field->type == MYSQL_TYPE_BLOB) {
+		else if ((field->type == MYSQL_TYPE_BLOB) ||
+			 (field->type == MYSQL_TYPE_TINY_BLOB) ||
+			 (field->type == MYSQL_TYPE_MEDIUM_BLOB) ||
+			 (field->type == MYSQL_TYPE_LONG_BLOB)) {
 			_hasBlobField = true;
 			Binary data(field->length);
 			buffer = new ParamBuffer(data);
-			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_BLOB;
+			_resultBind[fieldPos].buffer_type = field->type;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].length = buffer->BufferLength();
@@ -227,7 +234,19 @@ void Statement::AssignNextParameter(const Nullable<MYSQL_TIME> &tm) {
 
 void Statement::AssignNextParameter(const Nullable<Binary> &data) {
 	if (! data.HasValue()) {
-		AssignNextParameter(new ParamBuffer(MYSQL_TYPE_BLOB, false));
+		enum enum_field_types fieldType = MYSQL_TYPE_TINY_BLOB;
+		if (data.HasValue()) {
+			if (data->BufferLength() < 256) {
+				fieldType = MYSQL_TYPE_TINY_BLOB;
+			} else if (data->BufferLength() < 64 * 1024) {
+				fieldType = MYSQL_TYPE_BLOB;
+			} else if (data -> BufferLength() < 16 * 1024 * 1024) {
+				fieldType = MYSQL_TYPE_MEDIUM_BLOB;
+			} else {
+				fieldType = MYSQL_TYPE_LONG_BLOB;
+			}
+		}
+		AssignNextParameter(new ParamBuffer(fieldType, false));
 	} else {
 		AssignNextParameter(new ParamBuffer(data.const_deref()));
 	}
@@ -323,7 +342,7 @@ void Statement::ClearResults() {
 	}
 
 	if ((_numberResultColumns > 0) && (_resultBind != NULL)) {
-		free (_resultBind);
+		free(_resultBind);
 	}	
 }
 
@@ -405,7 +424,8 @@ void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
 
-	if (_resultBind[column].buffer_type != MYSQL_TYPE_SHORT) {
+	if ((_resultBind[column].buffer_type != MYSQL_TYPE_SHORT) &&
+	    (_resultBind[column].buffer_type != MYSQL_TYPE_YEAR)) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
 	}
 	
@@ -479,7 +499,10 @@ void Statement::GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &result) 
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
 
-	if (_resultBind[column].buffer_type != MYSQL_TYPE_TIMESTAMP) {
+	if ((_resultBind[column].buffer_type != MYSQL_TYPE_TIMESTAMP) &&
+	    (_resultBind[column].buffer_type != MYSQL_TYPE_DATE) &&
+	    (_resultBind[column].buffer_type != MYSQL_TYPE_TIME) && 
+	    (_resultBind[column].buffer_type != MYSQL_TYPE_DATETIME))  {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
 	}
 
@@ -501,14 +524,31 @@ void Statement::GetDataInRow(unsigned int column, Nullable<Binary> &result) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column out of range");
 	}
 
-	if (_resultBind[column].buffer_type != MYSQL_TYPE_BLOB) {
-		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
-	}
-
 	if (! (*(_resultParams[column]->IsNull()))) {
+		if (_resultBind[column].buffer_type == MYSQL_TYPE_TINY_BLOB) {
+			if (*(_resultParams[column]->BufferLength()) >= 256) {
+				throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "data too large for Blob type");
+			}
+		} else if (_resultBind[column].buffer_type == MYSQL_TYPE_BLOB) {
+			if (*(_resultParams[column]->BufferLength()) >= 64 * 1024) {
+				throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "data too large for Blob type");
+			}
+		} else if (_resultBind[column].buffer_type == MYSQL_TYPE_MEDIUM_BLOB) {
+			if (*(_resultParams[column]->BufferLength()) >= 16 * 1024 * 1024) {
+				throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "data too large for Medium Blob type");
+			}
+		} else if (_resultBind[column].buffer_type == MYSQL_TYPE_LONG_BLOB) {
+			if (*(_resultParams[column]->BufferLength()) >= (size_t) 4 * 1024 * 1024 * 1024) {
+				throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "data too large for Large Blob type");
+			}
+		} else {
+			throw DatabaseException("Error in Statement::GetDataInRow<Binary>", 0, "----", "column not of correct type (should be Blob)");
+		}
+
 		if (mysql_stmt_fetch_column(_stmt, &(_resultBind[column]), column, 0) != 0) {
-			throw DatabaseException(_stmt, "Error in GetDataInRow(Binary)");
+			throw DatabaseException(_stmt, "Error in GetDataInRow<Binary>");
 		}	
+
 		Binary fromdb;
 		fromdb.AssignDataToBuffer((unsigned char *)_resultParams[column]->Buffer(), *(_resultParams[column]->BufferLength()));
 		result = fromdb;
@@ -525,6 +565,10 @@ Nullable<Binary> Statement::GetBinaryDataInRow(unsigned int column) {
 
 unsigned long long Statement::NumberOfAffectedRows() {
 	return _numberAffectedRows;
+}
+
+unsigned long long Statement::NumberOfReturnedRows() { 
+	return mysql_stmt_num_rows(_stmt);
 }
 
 Statement::operator bool() {
@@ -548,5 +592,12 @@ FetchSentinel::FetchSentinel() {}
 
 Statement &operator<<(Statement &stmt, const FetchSentinel&) {
 	stmt.FetchNextRow();
+	return stmt;
+}
+
+ResetSentinel::ResetSentinel() {}
+
+Statement &operator<<(Statement &stmt, const ResetSentinel&) {
+	stmt.ResetParameters();
 	return stmt;
 }

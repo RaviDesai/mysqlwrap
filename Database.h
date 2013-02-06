@@ -10,6 +10,9 @@ public:
 	Database(const Database &db);
 	virtual ~Database();
 
+	static void Initialize();
+	static void Finalize();
+
 	void SetInitialCommand(const std::string &initialCommand);
 	bool Autocommit() const;
 	void Autocommit(bool value);
@@ -35,4 +38,10 @@ private:
 
 	bool _isConnected;
 	bool _autocommit;
+};
+
+class DatabaseInitializer {
+public:
+	DatabaseInitializer();
+	~DatabaseInitializer();
 };

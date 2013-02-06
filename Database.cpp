@@ -1,5 +1,7 @@
 #include "Database.h"
 #include "DatabaseException.h"
+#include <iostream>
+using namespace std;
 
 Database::Database(const std::string &host, const std::string &user, const std::string &password, const std::string &database, unsigned int port, const char *unixSocket, unsigned long clientFlag) {
 	_host = host;
@@ -100,3 +102,22 @@ void Database::Rollback() {
 bool Database::IsConnected() {
 	return _isConnected;
 }
+
+void Database::Initialize() {
+	if (mysql_library_init(0, NULL, NULL) != 0) {
+		throw DatabaseException("Error in Database::Initialize", 0, "----", "Failure to initialize the database library");
+	}
+}
+
+void Database::Finalize() {
+	mysql_library_end();
+}
+
+DatabaseInitializer::DatabaseInitializer() {
+	Database::Initialize();
+}
+
+DatabaseInitializer::~DatabaseInitializer() {
+	Database::Finalize();
+}
+

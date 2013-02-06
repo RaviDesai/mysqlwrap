@@ -147,12 +147,15 @@ void TestDatabase::Test4() {
 	
 		Nullable<Binary> mikepic;
 		stmt >> mikepic;
-
+	
 		UTASSERT(mikepic.HasValue());
 		UTASSERT(mikepic->BufferLength() == 36365);
 		UTASSERT((mikepic.const_deref()) == picFromDisk);
 	} catch (const DatabaseException &de) {
 		cout << de << endl;
+		caught = true;
+	} catch (const NullableException &ne) {
+		cout << ne << endl;
 		caught = true;
 	}
 
@@ -161,6 +164,50 @@ void TestDatabase::Test4() {
 
 void TestDatabase::Test5() {
 	cout << "in test5" << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		UTASSERT(db.IsConnected());	
+
+		Statement stmt(db, "SELECT * from COUNTRY where country_id = ?");
+		stmt << Nullable<short int>(7) << execute;
+
+		UTASSERT(stmt << fetch);
+		UTASSERT(! stmt.Eof());
+
+		Nullable<short int> countryId;
+		Nullable<std::string> countryName;
+		Nullable<MYSQL_TIME> lastUpdate;
+
+		stmt >> countryId >> countryName >> lastUpdate;
+
+		UTASSERT(7 == (*countryId));	
+		UTASSERT(strcmp(countryName->c_str(), "Armenia") == 0);
+		UTASSERT(lastUpdate->year == 2006);
+		UTASSERT(lastUpdate->month == 2);
+		UTASSERT(lastUpdate->day == 15);
+
+		stmt << reset << Nullable<short int>(8) << execute;
+		UTASSERT(stmt << fetch);
+		UTASSERT(! stmt.Eof());
+
+		stmt >> countryId >> countryName >> lastUpdate;
+
+		UTASSERT(8 == (*countryId));	
+		UTASSERT(strcmp(countryName->c_str(), "Australia") == 0);
+		UTASSERT(lastUpdate->year == 2006);
+		UTASSERT(lastUpdate->month == 2);
+		UTASSERT(lastUpdate->day == 15);
+
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
 }
 
 
@@ -176,9 +223,12 @@ int TestDatabase::RunSpecificTest(DatabaseMemberPointer test) {
 	int failures = 0;
 	try {
 		(this->*test)();
-	} catch (UTFail &fail) {
+	} catch (const UTFail &fail) {
 		failures++;
 		cout << fail << endl;
+	} catch (...) {
+		failures++;
+		cout << "Some exception other than UTFAIL escaped from your UT!" << endl;
 	}
 	return failures;
 }

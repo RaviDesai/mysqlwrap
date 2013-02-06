@@ -18,13 +18,18 @@ public:
 };
 const FetchSentinel fetch;
 
+class ResetSentinel {
+public:
+	ResetSentinel();
+};
+const ResetSentinel reset;
+
 class Statement {
 public:
 	Statement(Database &db, const std::string &sqlStatement); 
 	Statement(const Statement &);
 	virtual ~Statement();
 
-	unsigned long ParameterCount();
 	void AssignNextParameter(const Nullable<std::string> &param);
 	void AssignNextParameter(const Nullable<char> &param);
 	void AssignNextParameter(const Nullable<unsigned char> &param);
@@ -34,12 +39,14 @@ public:
 	void AssignNextParameter(const Nullable<MYSQL_TIME> &param);
 	void AssignNextParameter(const Nullable<Binary> &data);
 
+	unsigned long ParameterCount();
 	void ResetParameters();
 	void Execute();
 	bool FetchNextRow();
 	bool Eof();
 	unsigned long long NumberOfAffectedRows();
 	operator bool();
+	unsigned long long NumberOfReturnedRows();
 
 	Nullable<char> GetTinyDataInRow(unsigned int column);
 	Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
@@ -92,6 +99,7 @@ private:
 
 Statement &operator<<(Statement &stmt, const ExecuteSentinel&);
 Statement &operator<<(Statement &stmt, const FetchSentinel&);
+Statement &operator<<(Statement &stmt, const ResetSentinel&);
 
 template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &param) {
 	stmt.AssignNextParameter(param);

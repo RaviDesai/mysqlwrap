@@ -13,6 +13,8 @@ int main(int argc, char** argv)
 {
 	cout << "Begin Test Suite" << endl;
 
+	DatabaseInitializer di();
+
 	TestNullable ts1;
 	int failures = ts1.RunTests();
 

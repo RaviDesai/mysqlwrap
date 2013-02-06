@@ -1,5 +1,6 @@
 #include "Binary.h"
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -12,7 +13,10 @@ Binary::Binary() {
 Binary::Binary(size_t bufferSize) {
 	_bufferLength = 0;
 	_bufferSize = bufferSize;
-	_buffer = (unsigned char *)malloc(_bufferSize);
+	_buffer = NULL;
+	if (bufferSize > 0) {
+		_buffer = (unsigned char *)malloc(_bufferSize);
+	}
 }
 
 Binary::Binary(unsigned char *buffer, size_t bufferLength, size_t bufferSize) {
