@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
 		stmt.AssignNextParameter(Nullable<string>("USA"));
 		stmt.Execute();
 		stmt.FetchNextRow();
-		Nullable<short int> countryId = stmt.GetShortDataInRow(0);
+		Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
 		Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
 		Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
 
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
 		stmt.AssignNextParameter(Nullable<string>("Canada"));
 		stmt.Execute();
 		stmt.FetchNextRow();
-		countryId = stmt.GetShortDataInRow(0);
+		countryId = stmt.GetUShortDataInRow(0);
 		countryName = stmt.GetStringDataInRow(1);
 		lastUpdate = stmt.GetTimeDataInRow(2);
 
@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
 		stmt.Execute();
 		stmt.FetchNextRow();
 
-		countryId = stmt.GetShortDataInRow(0);
+		countryId = stmt.GetUShortDataInRow(0);
 		countryName = stmt.GetStringDataInRow(1);
 		lastUpdate = stmt.GetTimeDataInRow(2);
 
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
 		     << endl;
 
 		Statement deleteStmt(db, "delete from country where country_id = ?");
-		deleteStmt.AssignNextParameter(Nullable<short int>(countryId));
+		deleteStmt.AssignNextParameter(Nullable<unsigned short int>(countryId));
 		deleteStmt.Execute();
 		cout << "Deleted " << deleteStmt.NumberOfAffectedRows() << " rows." << endl;
 		*/
@@ -252,7 +252,7 @@ int main(int argc, char** argv) {
 
 		cout << "Eof: " << staffSelect.Eof() << endl;
 
-		Nullable<char> staff_id = staffSelect.GetTinyDataInRow(0);
+		Nullable<unsigned char> staff_id = staffSelect.GetUTinyDataInRow(0);
 		Nullable<std::string> staff_first = staffSelect.GetStringDataInRow(1);
 		Nullable<std::string> staff_last = staffSelect.GetStringDataInRow(2);
 		Nullable<Binary> staff_pic(staffSelect.GetBinaryDataInRow(3));

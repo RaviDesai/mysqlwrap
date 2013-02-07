@@ -199,6 +199,7 @@ void Statement::AssignNextParameter(ParamBuffer *buffer) {
         _bind[pos].buffer_length = buffer->BufferSize();
         _bind[pos].is_null = buffer->IsNull();
         _bind[pos].length = buffer->BufferLength();
+	_bind[pos].is_unsigned = buffer->IsUnsigned();
 }
 
 void Statement::AssignNextParameter(const Nullable<std::string> &str) { 
