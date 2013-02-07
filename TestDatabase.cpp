@@ -52,7 +52,7 @@ void TestDatabase::Test2() {
 		
 		while (stmt.FetchNextRow()) {
 			testId++;
-			Nullable<short int> countryId = stmt.GetShortDataInRow(0);
+			Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
 			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
 			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
 
@@ -95,7 +95,7 @@ void TestDatabase::Test3() {
 		
 		while (stmt << fetch) {
 			testId++;
-			Nullable<short int> countryId;
+			Nullable<unsigned short int> countryId;
 			Nullable<std::string> countryName;
 			Nullable<MYSQL_TIME> lastUpdate;
 
@@ -178,7 +178,7 @@ void TestDatabase::Test5() {
 		UTASSERT(stmt << fetch);
 		UTASSERT(! stmt.Eof());
 
-		Nullable<short int> countryId;
+		Nullable<unsigned short int> countryId;
 		Nullable<std::string> countryName;
 		Nullable<MYSQL_TIME> lastUpdate;
 
@@ -213,6 +213,41 @@ void TestDatabase::Test5() {
 
 void TestDatabase::Test6() {
 	cout << "in test6" << endl;
+	bool wasCaught = false;
+	try {
+		Database db("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		UTASSERT(db.IsConnected());	
+
+		Statement stmt(db, "SELECT film_id, release_year from FILM where film_id = ?");
+		stmt << Nullable<unsigned short int>(100) << execute;
+
+		UTASSERT(stmt << fetch);
+		UTASSERT(! stmt.Eof());
+
+		Nullable<unsigned short int> filmId;
+		Nullable<unsigned short int> releaseYear;
+
+		stmt >> filmId >> releaseYear;
+		UTASSERT(*filmId == (unsigned short) 100);
+		UTASSERT(*releaseYear == (unsigned short) 2000);
+
+		stmt << reset << Nullable<unsigned short int>(101) << execute;
+
+		UTASSERT(stmt << fetch);
+		UTASSERT(! stmt.Eof());
+
+		stmt >> filmId >> releaseYear;
+		UTASSERT(*filmId == (unsigned short) 101);
+		UTASSERT(*releaseYear == (unsigned short) 2006);
+
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
 }
 
 void TestDatabase::Test7() {

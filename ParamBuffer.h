@@ -16,6 +16,8 @@ public:
 	ParamBuffer(const Binary &data);
 	ParamBuffer(const char ch);
 	ParamBuffer(const unsigned char ch);
+	ParamBuffer(const float f);
+	ParamBuffer(const double d);
 
 	ParamBuffer(const ParamBuffer &copy);
 	~ParamBuffer();

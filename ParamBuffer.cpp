@@ -103,6 +103,30 @@ ParamBuffer::ParamBuffer(const unsigned short int i) {
 	*((short int *)_buffer) = i;
 }
 
+ParamBuffer::ParamBuffer(const float f) {
+	_buffer = malloc(sizeof(float));
+	_bufferSize = sizeof (float);
+	_bufferLength = _bufferSize;
+	_type = MYSQL_TYPE_FLOAT;
+	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 1;
+
+	*((float *)_buffer) = f;
+}
+
+ParamBuffer::ParamBuffer(const double d) {
+	_buffer = malloc(sizeof(double));
+	_bufferSize = sizeof (double);
+	_bufferLength = _bufferSize;
+	_type = MYSQL_TYPE_FLOAT;
+	_isNull = 0;
+	_isTruncated = 0;
+	_isUnsigned = 1;
+
+	*((double *)_buffer) = d;
+}
+
 ParamBuffer::ParamBuffer(const int i) {
 	_buffer = malloc(sizeof(int));
 	_bufferSize = sizeof(int);
