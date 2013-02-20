@@ -1,28 +1,25 @@
 #pragma once
 
 #include <iostream>
-#include "Database.h"
 #include "UTFail.h"
 
 using namespace std;
-using namespace MySQLWrap;
 
-class TestDatabase;
-typedef void (TestDatabase::*DatabaseMemberPointer)();
+class TestImport;
+typedef void (TestImport::*ImportMemberPointer)();
 
-class TestDatabase {
+class TestImport {
 public:
-	TestDatabase();
+	TestImport();
 	int RunTests(bool embedded);
 private:
 	void Test1();
 	void Test2();
-	void Test2AdHoc();
 	void Test3();
 	void Test4();
 	void Test5();
 	void Test6();
 	void Test7();
 
-	int RunSpecificTest(DatabaseMemberPointer test);
+	int RunSpecificTest(ImportMemberPointer test);
 };

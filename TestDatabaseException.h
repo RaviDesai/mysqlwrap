@@ -5,6 +5,7 @@
 #include "UTFail.h"
 
 using namespace std;
+using namespace MySQLWrap;
 
 class TestDatabaseException;
 typedef void (TestDatabaseException::*DatabaseExceptionMemberPointer)();

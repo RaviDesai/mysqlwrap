@@ -5,6 +5,8 @@
 
 using namespace std;
 
+namespace MySQLWrap {
+
 class NullableException {
 public:
 	NullableException() {}
@@ -150,4 +152,6 @@ template<class T> inline bool operator >= (const Nullable<T> &x, const Nullable<
 	if (!x) return false;
 	if (!y) return true;
 	return (*x >= *y);
+}
+
 }

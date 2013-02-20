@@ -4,6 +4,8 @@
 
 using namespace std;
 
+namespace MySQLWrap {
+
 Binary::Binary() {
 	_bufferLength = 0;
 	_bufferSize = 0;
@@ -129,4 +131,6 @@ bool operator==(const Binary &left, const Binary &right) {
 		if (leftBuffer[i] != rightBuffer[i]) return false;
 	}
 	return true;
+}
+
 }

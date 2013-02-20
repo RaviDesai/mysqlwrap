@@ -6,6 +6,8 @@
 
 using namespace std;
 
+namespace MySQLWrap {
+
 Statement::Statement(Database &db, const std::string &sqlStatement) {
 	_sqlStatement = sqlStatement;
 	_dbcopy = db._db;
@@ -64,6 +66,7 @@ void Statement::Prepare() {
 	MYSQL_FIELD *field;
 	while ((field = mysql_fetch_field(metaData)) != NULL) {
 		ParamBuffer *buffer = NULL;
+
 		if ((field->type == MYSQL_TYPE_VAR_STRING) || 
 		    (field->type == MYSQL_TYPE_STRING) ||
 		    (field->type == MYSQL_TYPE_DECIMAL) ||
@@ -76,6 +79,7 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 		}
 		else if (field->type == MYSQL_TYPE_TINY) {
 			if ((field->flags & UNSIGNED_FLAG) != 0) {
@@ -86,7 +90,9 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_TINY;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
 		}
 		else if ((field->type == MYSQL_TYPE_SHORT) ||
@@ -99,7 +105,9 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_type = MYSQL_TYPE_SHORT;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
 		}
 		else if ((field->type == MYSQL_TYPE_LONG) ||
@@ -112,7 +120,9 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_type = field->type;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
 		}
 		else if ((field->type == MYSQL_TYPE_TIMESTAMP) ||
@@ -124,7 +134,9 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_type = field->type;
 			_resultBind[fieldPos].buffer = buffer->Buffer();
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 		}
 		else if ((field->type == MYSQL_TYPE_BLOB) ||
 			 (field->type == MYSQL_TYPE_TINY_BLOB) ||
@@ -138,6 +150,7 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
 			_resultBind[fieldPos].length = buffer->BufferLength();
 			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
 		}
 
 		if (buffer != NULL) {
@@ -328,7 +341,7 @@ void Statement::Execute() {
 	}
 
 	if (mysql_stmt_execute(_stmt) != 0) {
-		throw DatabaseException(_stmt, "Error in Statement::Execute while executing _stmt");
+		throw DatabaseException(_stmt, "Error in Statement::Execute while executing statement");
 	}
 
 	if (_numberResultColumns > 0) {
@@ -515,7 +528,6 @@ void Statement::GetDataInRow(unsigned int column, Nullable<short int> &result) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column not of correct type");
 	}
 	
-	cout << "sign: " << (int) _resultBind[column].is_unsigned << endl;
 	if (_resultBind[column].is_unsigned) {
 		throw DatabaseException("Error in Statement::GetDataInRow", 0, "----", "column is an unsigned data type");
 	}
@@ -711,8 +723,8 @@ Statement::operator bool() {
 	return ! Eof();
 }
 
-int Statement::GetNextDataColumn() {
-	int result = _currentColumn;
+unsigned int Statement::GetNextDataColumn() {
+	unsigned int result = _currentColumn;
 	_currentColumn++;
 	return result;
 }
@@ -736,4 +748,6 @@ ResetSentinel::ResetSentinel() {}
 Statement &operator<<(Statement &stmt, const ResetSentinel&) {
 	stmt.ResetParameters();
 	return stmt;
+}
+
 }

@@ -2,50 +2,19 @@
 
 #include <vector>
 #include "Database.h"
+#include "Statement.h"
 #include "ParamBuffer.h"
 #include "Nullable.h"
 #include <mysql_time.h>
 
 namespace MySQLWrap {
 
-	class ExecuteSentinel {
+	class AdhocStatement {
 	public:
-		ExecuteSentinel();
-	};
-	const ExecuteSentinel execute;
+		AdhocStatement(Database &db, const std::string &sqlStatement); 
+		AdhocStatement(const AdhocStatement &copy);
+		virtual ~AdhocStatement();
 
-	class FetchSentinel {
-	public:
-		FetchSentinel();
-	};
-	const FetchSentinel fetch;
-
-	class ResetSentinel {
-	public:
-		ResetSentinel();
-	};
-	const ResetSentinel reset;
-
-	class Statement {
-	public:
-		Statement(Database &db, const std::string &sqlStatement); 
-		Statement(const Statement &);
-		virtual ~Statement();
-
-		void AssignNextParameter(const Nullable<std::string> &param);
-		void AssignNextParameter(const Nullable<char> &param);
-		void AssignNextParameter(const Nullable<unsigned char> &param);
-		void AssignNextParameter(const Nullable<short int> &param);
-		void AssignNextParameter(const Nullable<unsigned short int> &param);
-		void AssignNextParameter(const Nullable<unsigned int> &param);
-		void AssignNextParameter(const Nullable<int> &param);
-		void AssignNextParameter(const Nullable<MYSQL_TIME> &param);
-		void AssignNextParameter(const Nullable<Binary> &data);
-		void AssignNextParameter(const Nullable<float> &data);
-		void AssignNextParameter(const Nullable<double> &data);
-
-		unsigned long ParameterCount();
-		void ResetParameters();
 		void Execute();
 		bool FetchNextRow();
 		bool Eof();
@@ -65,8 +34,7 @@ namespace MySQLWrap {
 		Nullable<float> GetFloatDataInRow(unsigned int column);
 		Nullable<double> GetDoubleDataInRow(unsigned int column);
 
-
-		template <class X> Statement &operator>>(Nullable<X> &data) {
+		template <class X> AdhocStatement &operator>>(Nullable<X> &data) {
 			GetDataInRow(GetNextDataColumn(), data);
 			return *this;
 		}
@@ -86,36 +54,23 @@ namespace MySQLWrap {
 		unsigned int GetNextDataColumn();
 
 	private:
-		void AssignNextParameter(ParamBuffer *buffer);
 		void Prepare();
-		void ClearParameters();
-		void ClearResults();
 
 		unsigned int _numberResultColumns;
 		unsigned int _currentColumn;
-		bool _hasBlobField;
 		my_ulonglong _numberAffectedRows;
+		my_ulonglong _numberResultRows;
 
-		MYSQL_STMT *_stmt;
+		MYSQL_RES *_result;
 		MYSQL *_dbcopy;
-		MYSQL_BIND *_bind;
-		MYSQL_BIND *_resultBind;
+		MYSQL_ROW _currentRow;
+		unsigned long* _currentRowLengths;
 
 		std::string _sqlStatement;
 		bool _resultWasStored;
 		bool _eof;
-
-		std::vector<ParamBuffer*> _params;
-		std::vector<ParamBuffer*> _resultParams;
 	};
 
-	Statement &operator<<(Statement &stmt, const ExecuteSentinel&);
-	Statement &operator<<(Statement &stmt, const FetchSentinel&);
-	Statement &operator<<(Statement &stmt, const ResetSentinel&);
-
-	template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &param) {
-		stmt.AssignNextParameter(param);
-		return stmt;
-	}
-
+	AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel&);
+	AdhocStatement &operator<<(AdhocStatement &stmt, const FetchSentinel&);
 }

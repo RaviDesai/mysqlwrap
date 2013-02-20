@@ -14,6 +14,7 @@
 #include "ParamBuffer.h"
 
 using namespace std;
+using namespace MySQLWrap;
 
 static void print_stmt_error (MYSQL_STMT *stmt, const char *message) {
 	fprintf (stderr, "%s\n", message);

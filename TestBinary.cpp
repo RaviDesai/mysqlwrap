@@ -7,7 +7,8 @@ using namespace std;
 TestBinary::TestBinary() {}
 
 void TestBinary::Test1() {
-	cout << "in test1" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Binary b1;
 	UTASSERT(b1.BufferLength() == 0);
 	UTASSERT(b1.BufferSize() == 0);
@@ -31,7 +32,7 @@ void TestBinary::Test1() {
 }
 
 void TestBinary::Test2() {
-	cout << "in test2" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	unsigned char *buffer = (unsigned char *)malloc(10);
 	for (unsigned int i = 0; i < 10; i++) {
@@ -50,7 +51,7 @@ void TestBinary::Test2() {
 }
 
 void TestBinary::Test3() {
-	cout << "in test3" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 	
 	unsigned char *buffer = (unsigned char *)malloc(10);
 	for (unsigned int i = 0; i < 10; i++) {
@@ -77,7 +78,7 @@ void TestBinary::Test3() {
 }
 
 void TestBinary::Test4() {
-	cout << "in test4" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	Binary b1(128);
 	UTASSERT(b1.Buffer() != NULL);
@@ -107,7 +108,7 @@ void TestBinary::Test4() {
 }
 
 void TestBinary::Test5() {
-	cout << "in test5" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	unsigned char *buffer = (unsigned char *)malloc(10);
 	for (unsigned int i = 0; i < 10; i++) {
@@ -124,11 +125,11 @@ void TestBinary::Test5() {
 
 
 void TestBinary::Test6() {
-	cout << "in test6" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 void TestBinary::Test7() {
-	cout << "in test7" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 int TestBinary::RunSpecificTest(BinaryMemberPointer test) {

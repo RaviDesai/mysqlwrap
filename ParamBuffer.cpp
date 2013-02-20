@@ -4,6 +4,8 @@
 #include <iostream>
 using namespace std;
 
+namespace MySQLWrap {
+
 ParamBuffer::ParamBuffer(enum_field_types type, my_bool isUnsigned) {
 	_type = type;
 	_buffer = NULL;
@@ -200,4 +202,10 @@ my_bool ParamBuffer::IsUnsigned() {
 
 my_bool *ParamBuffer::IsTruncated() {
 	return &_isTruncated;
+}
+
+my_bool *ParamBuffer::Error() {
+	return &_error;
+}
+
 }

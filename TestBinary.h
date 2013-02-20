@@ -5,6 +5,7 @@
 #include "UTFail.h"
 
 using namespace std;
+using namespace MySQLWrap;
 
 class TestBinary;
 typedef void (TestBinary::*BinaryMemberPointer)();

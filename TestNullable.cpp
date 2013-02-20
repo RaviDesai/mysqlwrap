@@ -7,7 +7,8 @@ using namespace std;
 TestNullable::TestNullable() {}
 
 void TestNullable::Test1() {
-	cout << "in test1" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Nullable<int> ni;
 	UTASSERT(ni.HasValue() == false);
 	UTASSERT(!ni);
@@ -23,14 +24,16 @@ void TestNullable::Test1() {
 }
 
 void TestNullable::Test2() {
-	cout << "in test2" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Nullable<int> ni(7);
 	UTASSERT(ni.HasValue() == true);
 	UTASSERT((!ni) == false);
 }
 
 void TestNullable::Test3() {
-	cout << "in test3" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Nullable<int> ni;
 	Nullable<int> ni2(14);
 
@@ -47,7 +50,8 @@ void TestNullable::Test3() {
 }
 
 void TestNullable::Test4() {
-	cout << "in test4" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Nullable<double> nd1;
 	Nullable<double> nd2;
 
@@ -61,7 +65,8 @@ void TestNullable::Test4() {
 }
 
 void TestNullable::Test5() {
-	cout << "in test5" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
+
 	Nullable<short int> nsi1;
 	Nullable<short int> nsi2(15);
 
@@ -85,7 +90,7 @@ void TestNullable::Test5() {
 
 
 void TestNullable::Test6() {
-	cout << "in test6" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	Nullable<std::string> ns1;
 	Nullable<std::string> ns2("test");
@@ -107,7 +112,7 @@ void TestNullable::Test6() {
 }
 
 void TestNullable::Test7() {
-	cout << "in test7" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	Nullable<int> ni1(5);
 	Nullable<int> ni2(19);

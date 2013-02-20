@@ -12,7 +12,7 @@ using namespace std;
 TestDatabaseException::TestDatabaseException() {}
 
 void TestDatabaseException::Test1() {
-	cout << "in test1" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 	
 	DatabaseException de("initial", 1, "9988", "end");
 	stringstream ss;
@@ -24,10 +24,10 @@ void TestDatabaseException::Test1() {
 }
 
 void TestDatabaseException::Test2() {
-	cout << "in test2" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	MYSQL *db = mysql_init(NULL);
-	UTASSERT(mysql_real_connect(db, "localhost", "baduser", "badpass", "sakila", 0, NULL, 0) == NULL)
+	UTASSERT(mysql_real_connect(db, "localhost", "root", "", "baddb", 0, NULL, 0) == NULL)
 	DatabaseException de(db, "initial");
 
 	stringstream ss;
@@ -35,12 +35,12 @@ void TestDatabaseException::Test2() {
 	char line[512];
 	ss.getline(line, 512);
 
-	UTASSERT(strcmp(line, "initial ERROR 1045(28000) Access denied for user 'baduser'@'localhost' (using password: YES)") == 0);
+	UTASSERT(strcmp(line, "initial ERROR 1049(42000) Unknown database 'baddb'") == 0);
 	mysql_close(db);
 }
 
 void TestDatabaseException::Test3() {
-	cout << "in test3" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 
 	MYSQL *db = mysql_init(NULL);
 	UTASSERT(mysql_real_connect(db, "localhost", "root", "", "sakila", 0, NULL, 0) != NULL)
@@ -61,20 +61,20 @@ void TestDatabaseException::Test3() {
 }
 
 void TestDatabaseException::Test4() {
-	cout << "in test4" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 void TestDatabaseException::Test5() {
-	cout << "in test5" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 
 void TestDatabaseException::Test6() {
-	cout << "in test6" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 void TestDatabaseException::Test7() {
-	cout << "in test7" << endl;
+	cout << __PRETTY_FUNCTION__ << endl;
 }
 
 int TestDatabaseException::RunSpecificTest(DatabaseExceptionMemberPointer test) {

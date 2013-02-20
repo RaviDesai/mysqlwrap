@@ -1,5 +1,7 @@
 #include "DatabaseException.h"
 
+namespace MySQLWrap {
+
 DatabaseException::DatabaseException(const std::string &initialMessage, int errno, const char *sqlState, const char *errorMessage) {
 	_initialMessage = initialMessage;
 	_errno = errno;
@@ -24,4 +26,6 @@ DatabaseException::DatabaseException(MYSQL_STMT *stmt, const std::string &initia
 std::ostream &operator<<(std::ostream &out, const DatabaseException &exp) {
 	out << exp._initialMessage << " ERROR " << exp._errno << "(" << exp._sqlState << ") " << exp._errorMessage;
 	return out;
+}
+
 }

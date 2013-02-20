@@ -12,11 +12,12 @@
 PROGRAM_SOURCE := program.cpp
 TEST_PROGRAM_SOURCE := test.cpp
 LIBRARY_NAME := dbwrap
-LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp
-TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp
+LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp
+TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp TestImport.cpp
 LIBRARY_TYPE := dynamic
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
+EMBEDDED := embedded
 DYLD_LIBRARY_PATH = /usr/local/mysql/lib
 export DYLD_LIBRARY_PATH
 
@@ -89,10 +90,14 @@ TEST_PROGRAM_DEPEND := $(TEST_PROGRAM_OBJECT:$(OBJ)=$(DEP))
 LIBRARY_DEPEND := $(LIBRARY_OBJECTS:$(OBJ)=$(DEP))
 
 CPP_INCDIR := ${shell /usr/local/mysql/bin/mysql_config --cflags}
-CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libs}
-#CPP_INCDIR := -I/usr/local/mysql/include
-#CPP_LIBDIR := -L/usr/local/mysql/lib -lmysqlclient -lpthread
 CPP_RPATH := -Wl,-rpath,/usr/local/mysql/lib
+
+ifeq ($(EMBEDDED),embedded)
+CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}
+else
+CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libs_r}
+endif
+
 
 ifeq ($(LIBRARY_TYPE),dynamic)
 	ifeq ($(USE_RPATH),yes)
@@ -136,7 +141,12 @@ run: deliver
 
 runtest: $(TEST_PROGRAM_BINARY)
 	@for progs in $(TEST_PROGRAM_BINARY); do \
-		$$progs; \
+		$$progs $(EMBEDDED) ; \
+	done
+	
+runtestemb: $(TEST_PROGRAM_BINARY)
+	@for progs in $(TEST_PROGRAM_BINARY); do \
+		$$progs embedded; \
 	done
 	
 $(INTERMEDIATE_FOLDER)%$(OBJ): %$(CPP)
