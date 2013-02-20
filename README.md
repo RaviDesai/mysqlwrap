@@ -22,6 +22,6 @@ Limitations:
 Building:
 - There is an included Makefile that has only been tested on OS/X Mountain Lion, but that an enterprising young person like yourself should be able to modify pretty easily to run on most varieties of Unix.
 - In the Makefile, you can set certain variables to control the type of build.
-- - EMBEDDED: embedded or <blank>       ## set to embedded to compile against the embedded server
-- - LIBRARY_TYPE: dynamic, static, or <blank>     ## type of library produced (blank means no library at all)
-- - LIBRARY_NAME: <name>      ## name of the library produced.  Called lib<name>.dylib for dynamic library
+- - EMBEDDED: embedded or blank       ## set to embedded to compile against the embedded server
+- - LIBRARY_TYPE: dynamic, static, or blank     ## type of library produced (blank means no library at all)
+- - LIBRARY_NAME: name      ## name of the library produced.  Called libname.dylib for dynamic library
