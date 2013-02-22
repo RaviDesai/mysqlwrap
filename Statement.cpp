@@ -125,6 +125,24 @@ void Statement::Prepare() {
 			_resultBind[fieldPos].error = buffer->Error();
 			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
 		}
+		else if (field->type == MYSQL_TYPE_FLOAT) {
+			_resultBind[fieldPos].buffer_type = field->type;
+			_resultBind[fieldPos].buffer = buffer->Buffer();
+			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
+			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
+			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
+		}
+		else if (field->type == MYSQL_TYPE_DOUBLE) {
+			_resultBind[fieldPos].buffer_type = field->type;
+			_resultBind[fieldPos].buffer = buffer->Buffer();
+			_resultBind[fieldPos].buffer_length = buffer->BufferSize();
+			_resultBind[fieldPos].length = buffer->BufferLength();
+			_resultBind[fieldPos].is_null = buffer->IsNull();
+			_resultBind[fieldPos].error = buffer->Error();
+			_resultBind[fieldPos].is_unsigned = buffer->IsUnsigned();
+		}
 		else if ((field->type == MYSQL_TYPE_TIMESTAMP) ||
 			 (field->type == MYSQL_TYPE_DATE) ||
 			 (field->type == MYSQL_TYPE_TIME) ||

@@ -6,6 +6,7 @@
 #include "ParamBuffer.h"
 #include "Nullable.h"
 #include <mysql_time.h>
+#include <mysql.h>
 
 namespace MySQLWrap {
 
@@ -64,6 +65,7 @@ namespace MySQLWrap {
 		MYSQL_RES *_result;
 		MYSQL *_dbcopy;
 		MYSQL_ROW _currentRow;
+		MYSQL_FIELD *_fields;
 		unsigned long* _currentRowLengths;
 
 		std::string _sqlStatement;

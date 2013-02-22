@@ -73,6 +73,10 @@ void AdhocStatement::Execute() {
 	} else {
 		_eof = false;
 		_numberResultRows = mysql_num_rows(_result);
+		_fields = mysql_fetch_fields(_result);
+		if (_fields == NULL) {
+			throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "couldn't retrieve fields from query");
+		}
 	}
 }
 
@@ -112,6 +116,9 @@ Nullable<char> AdhocStatement::GetTinyDataInRow(unsigned int column) {
 	Nullable<char> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_TINY) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
+			throw DatabaseException("Error in AdhocStatement.GetTinyDataInRow", 0, "----", "database field is not an signed tiny type");
+		}
 		char ival = (char) 0;
 		if (sscanf(val->c_str(), "%hhi",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetTinyDataInRow", 0, "----", "sscanf failed to produce a char.");
@@ -125,6 +132,9 @@ Nullable<unsigned char> AdhocStatement::GetUTinyDataInRow(unsigned int column) {
 	Nullable<unsigned char> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_TINY) || ((_fields[column].flags & UNSIGNED_FLAG) == 0)) {
+			throw DatabaseException("Error in AdhocStatement.GetUTinyDataInRow", 0, "----", "database field is not an unsigned tiny type");
+		}
 		unsigned char ival = (unsigned char) 0;
 		if (sscanf(val->c_str(), "%hhui",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetUTinyDataInRow", 0, "----", "sscanf failed to produce an unsigned char");
@@ -138,6 +148,9 @@ Nullable<short int> AdhocStatement::GetShortDataInRow(unsigned int column) {
 	Nullable<short int> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_SHORT) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
+			throw DatabaseException("Error in AdhocStatement.GetShortDataInRow", 0, "----", "database field is not a signed short type");
+		}
 		short int ival = (short int) 0;
 		if (sscanf(val->c_str(), "%hi",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetUShortDataInRow", 0, "----", "sscanf failed to produce an unsigned short");
@@ -151,6 +164,9 @@ Nullable<unsigned short int> AdhocStatement::GetUShortDataInRow(unsigned int col
 	Nullable<unsigned short int> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_YEAR) && ((_fields[column].type != MYSQL_TYPE_SHORT) || ((_fields[column].flags & UNSIGNED_FLAG) == 0))) {
+			throw DatabaseException("Error in AdhocStatement.GetUShortDataInRow", 0, "----", "database field is not a unsigned short or year type");
+		}
 		unsigned short int ival = (unsigned short int) 0;
 		if (sscanf(val->c_str(), "%hui",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetUShortDataInRow", 0, "----", "sscanf failed to produce an unsigned short");
@@ -164,6 +180,9 @@ Nullable<int> AdhocStatement::GetLongDataInRow(unsigned int column) {
 	Nullable<int> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_LONG) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
+			throw DatabaseException("Error in AdhocStatement.GetLongDataInRow", 0, "----", "database field is not a signed int type");
+		}
 		int ival = (short int) 0;
 		if (sscanf(val->c_str(), "%i",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetLongDataInRow", 0, "----", "sscanf failed to produce an integer");
@@ -177,6 +196,9 @@ Nullable<unsigned int> AdhocStatement::GetULongDataInRow(unsigned int column) {
 	Nullable<unsigned int> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_LONG) || ((_fields[column].flags & UNSIGNED_FLAG) == 0)) {
+			throw DatabaseException("Error in AdhocStatement.GetULongDataInRow", 0, "----", "database field is not an unsigned int type");
+		}
 		unsigned int ival = (unsigned int) 0;
 		if (sscanf(val->c_str(), "%ui",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetLongDataInRow", 0, "----", "sscanf failed to produce an unsigned integer");
@@ -190,6 +212,9 @@ Nullable<float> AdhocStatement::GetFloatDataInRow(unsigned int column) {
 	Nullable<float> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if (_fields[column].type != MYSQL_TYPE_FLOAT) {
+			throw DatabaseException("Error in AdhocStatement.GetFloatDataInRow", 0, "----", "database field is not a float type");
+		}
 		float ival = (float) 0;
 		if (sscanf(val->c_str(), "%f",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetLongDataInRow", 0, "----", "sscanf failed to produce a float");
@@ -203,6 +228,9 @@ Nullable<double> AdhocStatement::GetDoubleDataInRow(unsigned int column) {
 	Nullable<double> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if (_fields[column].type != MYSQL_TYPE_DOUBLE) {
+			throw DatabaseException("Error in AdhocStatement.GetDoubleDataInRow", 0, "----", "database field is not a double type");
+		}
 		double ival = (double) 0;
 		if (sscanf(val->c_str(), "%lf",  &ival) != 1) {
 			throw DatabaseException("Error in AdhocStatement::GetLongDataInRow", 0, "----", "sscanf failed to produce a double");
@@ -231,6 +259,12 @@ Nullable<Binary> AdhocStatement::GetBinaryDataInRow(unsigned int column) {
 		throw DatabaseException("Error in AdhocStatement::GetBinaryDataInRow", column, "----", "column requested outside of range of result set");
 	}
 
+	if ((_fields[column].type != MYSQL_TYPE_BLOB) &&
+	    (_fields[column].type != MYSQL_TYPE_TINY_BLOB) &&
+	    (_fields[column].type != MYSQL_TYPE_MEDIUM_BLOB) &&
+	    (_fields[column].type != MYSQL_TYPE_LONG_BLOB)) {
+		throw DatabaseException("Error in AdhocStatement::GetBinaryDataInRow", 0, "----", "value is not a blob type");
+	}
 	if (_currentRow[column] != NULL) {
 		Binary b1;
 		b1.AssignDataToBuffer((unsigned char *)_currentRow[column], _currentRowLengths[column]);
@@ -244,6 +278,12 @@ Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
 	Nullable<MYSQL_TIME> result;
 	Nullable<string> val = GetStringDataInRow(column);
 	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_TIMESTAMP) &&
+		    (_fields[column].type != MYSQL_TYPE_DATE) &&
+		    (_fields[column].type != MYSQL_TYPE_TIME) &&
+		    (_fields[column].type != MYSQL_TYPE_DATETIME)) {
+			throw DatabaseException("Error in AdhocStatement::GetTimeDataInRow", 0, "----", "value is not a date or time type");
+		}
 		MYSQL_TIME timeval;
 		timeval.year = 0;
 		timeval.month = 0;
