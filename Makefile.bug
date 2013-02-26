@@ -9,12 +9,12 @@
 # INTERMEDIATE_FOLDER is the name of the folder to contain the build files (do not include the ending /).
 #
 
-PROGRAM_SOURCE := program.cpp bug.cpp
-TEST_PROGRAM_SOURCE := test.cpp
+PROGRAM_SOURCE := bug.cpp
+TEST_PROGRAM_SOURCE := 
 LIBRARY_NAME := dbwrap
-LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp
-TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp TestImport.cpp
-LIBRARY_TYPE := dynamic
+LIBRARY_SOURCES := 
+TEST_LIBRARY_SOURCES := 
+LIBRARY_TYPE :=
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
 EMBEDDED := 
@@ -92,7 +92,7 @@ TEST_PROGRAM_DEPEND := $(TEST_PROGRAM_OBJECT:$(OBJ)=$(DEP))
 LIBRARY_DEPEND := $(LIBRARY_OBJECTS:$(OBJ)=$(DEP))
 
 CPP_INCDIR := ${shell /usr/local/mysql/bin/mysql_config --cflags}
-CPP_RPATH := -Wl,-rpath,/usr/local/mysql/lib
+CPP_RPATH := 
 
 ifeq ($(EMBEDDED),embedded)
 CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}
@@ -137,7 +137,7 @@ endif
 run: deliver
 	@echo $(DYLD_LIBRARY_PATH)
 	@for progs in $(PROGRAM_BINARY); do \
-		$$progs; \
+		$$progs $(EMBEDDED); \
 		echo "-----------------------------\n"; \
 	done
 

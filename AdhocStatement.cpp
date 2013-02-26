@@ -114,7 +114,7 @@ AdhocStatement::operator bool() {
 
 Nullable<char> AdhocStatement::GetTinyDataInRow(unsigned int column) {
 	Nullable<char> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_TINY) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
 			throw DatabaseException("Error in AdhocStatement.GetTinyDataInRow", 0, "----", "database field is not an signed tiny type");
@@ -130,7 +130,7 @@ Nullable<char> AdhocStatement::GetTinyDataInRow(unsigned int column) {
 
 Nullable<unsigned char> AdhocStatement::GetUTinyDataInRow(unsigned int column) {
 	Nullable<unsigned char> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_TINY) || ((_fields[column].flags & UNSIGNED_FLAG) == 0)) {
 			throw DatabaseException("Error in AdhocStatement.GetUTinyDataInRow", 0, "----", "database field is not an unsigned tiny type");
@@ -146,7 +146,7 @@ Nullable<unsigned char> AdhocStatement::GetUTinyDataInRow(unsigned int column) {
 
 Nullable<short int> AdhocStatement::GetShortDataInRow(unsigned int column) {
 	Nullable<short int> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_SHORT) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
 			throw DatabaseException("Error in AdhocStatement.GetShortDataInRow", 0, "----", "database field is not a signed short type");
@@ -162,7 +162,7 @@ Nullable<short int> AdhocStatement::GetShortDataInRow(unsigned int column) {
 
 Nullable<unsigned short int> AdhocStatement::GetUShortDataInRow(unsigned int column) {
 	Nullable<unsigned short int> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_YEAR) && ((_fields[column].type != MYSQL_TYPE_SHORT) || ((_fields[column].flags & UNSIGNED_FLAG) == 0))) {
 			throw DatabaseException("Error in AdhocStatement.GetUShortDataInRow", 0, "----", "database field is not a unsigned short or year type");
@@ -178,7 +178,7 @@ Nullable<unsigned short int> AdhocStatement::GetUShortDataInRow(unsigned int col
 
 Nullable<int> AdhocStatement::GetLongDataInRow(unsigned int column) {
 	Nullable<int> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_LONG) || ((_fields[column].flags & UNSIGNED_FLAG) != 0)) {
 			throw DatabaseException("Error in AdhocStatement.GetLongDataInRow", 0, "----", "database field is not a signed int type");
@@ -194,7 +194,7 @@ Nullable<int> AdhocStatement::GetLongDataInRow(unsigned int column) {
 
 Nullable<unsigned int> AdhocStatement::GetULongDataInRow(unsigned int column) {
 	Nullable<unsigned int> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_LONG) || ((_fields[column].flags & UNSIGNED_FLAG) == 0)) {
 			throw DatabaseException("Error in AdhocStatement.GetULongDataInRow", 0, "----", "database field is not an unsigned int type");
@@ -210,7 +210,7 @@ Nullable<unsigned int> AdhocStatement::GetULongDataInRow(unsigned int column) {
 
 Nullable<float> AdhocStatement::GetFloatDataInRow(unsigned int column) {
 	Nullable<float> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if (_fields[column].type != MYSQL_TYPE_FLOAT) {
 			throw DatabaseException("Error in AdhocStatement.GetFloatDataInRow", 0, "----", "database field is not a float type");
@@ -226,7 +226,7 @@ Nullable<float> AdhocStatement::GetFloatDataInRow(unsigned int column) {
 
 Nullable<double> AdhocStatement::GetDoubleDataInRow(unsigned int column) {
 	Nullable<double> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if (_fields[column].type != MYSQL_TYPE_DOUBLE) {
 			throw DatabaseException("Error in AdhocStatement.GetDoubleDataInRow", 0, "----", "database field is not a double type");
@@ -241,9 +241,23 @@ Nullable<double> AdhocStatement::GetDoubleDataInRow(unsigned int column) {
 }
 
 Nullable<string> AdhocStatement::GetStringDataInRow(unsigned int column) {
+	Nullable<string> val = GetStringDataInRowInternal(column);
+	if (val.HasValue()) {
+		if ((_fields[column].type != MYSQL_TYPE_VAR_STRING) && 
+		    (_fields[column].type != MYSQL_TYPE_STRING) &&
+		    (_fields[column].type != MYSQL_TYPE_DECIMAL) &&
+		    (_fields[column].type != MYSQL_TYPE_BIT) &&
+		    (_fields[column].type != MYSQL_TYPE_VARCHAR)) {
+			throw DatabaseException("Error in AdhocStatement::GeStringDataInRow", 0, "----", "database field is not a string, decimal, bit, or varchar type");
+		}
+	}
+	return val;
+}
+
+Nullable<string> AdhocStatement::GetStringDataInRowInternal(unsigned int column) {
 	Nullable<string> result;
 	if (column >= _numberResultColumns) { 
-		throw DatabaseException("Error in AdhocStatement::GetStringDataInRow", column, "----", "column requested outside of range of result set");
+		throw DatabaseException("Error in AdhocStatement::GetStringDataInRowInternal", column, "----", "column requested outside of range of result set");
 	}
 
 	if (_currentRow[column] != NULL) {
@@ -276,7 +290,7 @@ Nullable<Binary> AdhocStatement::GetBinaryDataInRow(unsigned int column) {
 
 Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
 	Nullable<MYSQL_TIME> result;
-	Nullable<string> val = GetStringDataInRow(column);
+	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_TIMESTAMP) &&
 		    (_fields[column].type != MYSQL_TYPE_DATE) &&
@@ -319,7 +333,7 @@ Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
 }
 
 void AdhocStatement::GetDataInRow(unsigned int column, Nullable<string> &result) {
-	result = GetStringDataInRow(column);
+	result = GetStringDataInRowInternal(column);
 }
 
 void AdhocStatement::GetDataInRow(unsigned int column, Nullable<char> &result) {

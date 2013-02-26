@@ -1,0 +1,25 @@
+This program fails with a segmentation fault on Mac OS/X Mountain Lion version 10.8.2 when compiled against the embedded mysqld library.
+The same program succeeds on the same platform when compiled against the mysql threaded client libraries.
+
+The segfault occurs in the mysql_stmt_execute function.
+
+I used the prebuilt installer for MYSQL pulled from the official website entitled: mysql-5.5.29-osx10.6-x86_64.dmg
+I installed the sakila database (specifically the country table) and populated it from the default scripts provided on the MYSQL website
+
+I am using gcc version 4.2.1 (as provided by XCode 4.6 command line tools installer).
+I compile to a build directory (here just called 'build/'), you'll need to create it to use my g++ lines (below) verbatim.
+
+The working version of the program (bug) is compiled in the following way and run against the installed MYSQL database instance:
+The Makefile actually uses the 'mysql_config --include' and 'mysql_config --libs_r' scripts for many of the switches below:
+
+g++ -Wall -g -O0 -c bug.cpp -I/usr/local/mysql/include  -Os -g -fno-common -fno-strict-aliasing -arch x86_64 -o build/bug.o
+g++ -Wall build/bug.o -I/usr/local/mysql/include  -Os -g -fno-common -fno-strict-aliasing -arch x86_64  -o build/bug -L/usr/local/mysql/lib -lmysqlclient_r   -lpthread -Lbuild/
+
+The version of the program (bug) that produces a segfault is compiled in the following way and run against an embedded MYSQL database instance (created in my
+home directory using the /usr/local/mysql/scripts/mysql_install_db script)
+As before, the Makefile actually uses the 'mysql_config --include' and 'mysql_config --libmysqld-libs' scripts to obtain many of the swithes below:
+
+g++ -Wall -g -O0 -c bug.cpp -I/usr/local/mysql/include  -Os -g -fno-common -fno-strict-aliasing -arch x86_64 -o build/bug.o
+g++ -Wall build/bug.o -I/usr/local/mysql/include  -Os -g -fno-common -fno-strict-aliasing -arch x86_64  -o build/bug -L/usr/local/mysql/lib -lmysqld    -lpthread -Lbuild/
+
+

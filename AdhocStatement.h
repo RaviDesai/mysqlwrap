@@ -56,6 +56,7 @@ namespace MySQLWrap {
 
 	private:
 		void Prepare();
+		Nullable<std::string> GetStringDataInRowInternal(unsigned int column);
 
 		unsigned int _numberResultColumns;
 		unsigned int _currentColumn;
