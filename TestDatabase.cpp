@@ -289,7 +289,7 @@ void TestDatabase::Test6() {
 
 		stmt >> filmId >> releaseYear;
 		UTASSERT(*filmId == (unsigned short) 100);
-		UTASSERT(*releaseYear == (unsigned short) 2000);
+		UTASSERT(*releaseYear == (unsigned short) 2006);
 
 		stmt << reset << Nullable<unsigned short int>(101) << execute;
 

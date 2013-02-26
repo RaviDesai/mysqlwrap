@@ -23,3 +23,11 @@ g++ -Wall -g -O0 -c bug.cpp -I/usr/local/mysql/include  -Os -g -fno-common -fno-
 g++ -Wall build/bug.o -I/usr/local/mysql/include  -Os -g -fno-common -fno-strict-aliasing -arch x86_64  -o build/bug -L/usr/local/mysql/lib -lmysqld    -lpthread -Lbuild/
 
 
+====
+
+Additional info.  The bug now appears only to be related to prepared statement when compiled against the embedded datbase libraries and returning a "string" type.
+When bug.cpp is modified to only return the country_id and/or last_update fields of the country table, the program completes normally.  The error only seems
+to occur when the country field is part of the result set.  I originally though the error has something to do with a parameterized where clause, so I updated
+bug 62367, but I see now that this is not the case.
+
+

@@ -22,7 +22,7 @@ void TestImport::Test1() {
 	char line[512];
 	bool wasCaught = false;
 	try {
-		Database db("localhost", "", "", "", 0, NULL, 0);
+		Database db("localhost", "root", "", "", 0, NULL, 0);
 		db.Connect();
 
 		db.Execute("drop database if exists sakila");

@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 	failures += ts2.RunTests();
 
 	TestDatabaseException ts3;
-	failures += ts3.RunTests();
+	failures += ts3.RunTests(embedded);
 
 	TestDatabase ts4;
 	failures += ts4.RunTests(embedded);

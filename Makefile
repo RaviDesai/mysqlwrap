@@ -17,7 +17,7 @@ TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseE
 LIBRARY_TYPE := dynamic
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
-EMBEDDED := 
+EMBEDDED := embedded
 DYLD_LIBRARY_PATH = /usr/local/mysql/lib
 export DYLD_LIBRARY_PATH
 
@@ -150,6 +150,16 @@ runbug: $(BUG_REPORT_BINARY)
 	@for progs in $(BUG_REPORT_BINARY); do \
 		$$progs $(EMBEDDED); \
 	done
+
+createdb: 
+	@rm -rf $(HOME)/mysql
+	@mkdir $(HOME)/mysql
+	@mkdir $(HOME)/mysql/data
+	@mkdir $(HOME)/mysql/log
+	@mkdir $(HOME)/mysql/tmp
+	@mkdir $(HOME)/mysql/plugins
+	sudo /usr/local/mysql/scripts/mysql_install_db --user=`whoami` --basedir=/usr/local/mysql --datadir=$(HOME)/mysql/data --plugin-dir=$(HOME)/mysql/plugins
+	
 	
 $(INTERMEDIATE_FOLDER)%$(OBJ): %$(CPP)
 	g++ -Wall $(COVERAGE) -c $< $(CPP_INCDIR) -o $@

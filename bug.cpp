@@ -46,13 +46,17 @@ int main(int argc, char** argv) {
 		cout << "Hello you are connected in standard client (non-embedded) mode" << endl;
 		if (mysql_library_init(0, NULL, NULL) != 0) {
 			cout << "Error in Database::Initialize" << endl;
+			return 1;
 		}
 	}
 
+	cout << "thread_init" << endl;
 	if (mysql_thread_init() != 0) {
 		cout << "Error in Database::ThreadInitialize" << endl;
+		return 1;
 	}
 
+	cout << "mysql init" << endl;
 	MYSQL *connect;
 	connect = mysql_init(NULL);
 	if (! connect) {
@@ -61,21 +65,28 @@ int main(int argc, char** argv) {
 	}
 
 	if (embedded) {
+		cout << "setting options" << endl;
 		mysql_options(connect, MYSQL_READ_DEFAULT_GROUP, "embedded");
 		mysql_options(connect, MYSQL_OPT_USE_EMBEDDED_CONNECTION, NULL);
 	}
 
+	cout << "real_connect" << endl;
 	connect = mysql_real_connect(connect, "localhost", "root", "", "sakila", 0, NULL, 0);
 	if (connect)
 	{
 		cout << "Connection succeeded" << endl;
-	}	
+	} else {
+		cout << "connction failure!" << endl;
+		return 1;
+	}
 
-	const char *stmt_str = "SELECT * FROM COUNTRY WHERE COUNTRY = ?";
+	const char *stmt_str = "SELECT country, country_id, last_update  FROM COUNTRY";
 	MYSQL_STMT *stmt;
 
+	cout << "stmt init" << endl;
 	stmt = mysql_stmt_init(connect);
 
+	cout << "prepare" << endl;
 	if (mysql_stmt_prepare(stmt, stmt_str, strlen(stmt_str)) != 0) {
 		print_stmt_error(stmt, "Count not prepare SELECT statement");
 		return 1;
@@ -83,7 +94,6 @@ int main(int argc, char** argv) {
 
 	int numberParams = mysql_stmt_param_count(stmt);
 	cout << "Number parameters: " << numberParams << endl;
-	MYSQL_BIND param[numberParams];
 	MYSQL_RES *metaData;
 	if ((metaData = mysql_stmt_result_metadata(stmt)) == NULL) {
 		print_stmt_error(stmt, "Error fetching stmt metadata");
@@ -99,53 +109,46 @@ int main(int argc, char** argv) {
 
 	const int STRING_SIZE = 50;
 
-	int countryId;
+	unsigned short countryId = 0;
 	char countryName[STRING_SIZE];
 	unsigned long countryNameLen;
 	MYSQL_TIME lastUpdate;
+	memset((void *) &lastUpdate, 0, sizeof(MYSQL_TYPE_TIME));
 	my_bool is_null[numberFields];
+	my_bool error[numberFields];
+	size_t countryIdLength = sizeof(unsigned short);
+	size_t lastUpdateLength = sizeof(MYSQL_TYPE_TIME);
 
 	MYSQL_BIND bind[numberFields];
 	memset ((void *) &bind, 0, sizeof(bind));
 
-	bind[0].buffer_type = MYSQL_TYPE_LONG;
-	bind[0].buffer = (void *) &countryId;
-	bind[0].is_unsigned = 0;
-	bind[0].is_null = &is_null[0];
+	bind[0].buffer_type = MYSQL_TYPE_STRING;
+	bind[0].buffer = (void *) countryName;
+	bind[0].is_null = &is_null[1];
+	bind[0].buffer_length = sizeof(countryName);
+	bind[0].length = &countryNameLen;
+	bind[0].error = &error[1];
 
-	bind[1].buffer_type = MYSQL_TYPE_STRING;
-	bind[1].buffer = (void *) countryName;
-	bind[1].is_null = &is_null[1];
-	bind[1].buffer_length = sizeof(countryName);
-	bind[1].length = &countryNameLen;
+	bind[1].buffer_type = MYSQL_TYPE_SHORT;
+	bind[1].buffer = (void *) &countryId;
+	bind[1].buffer_length = sizeof(unsigned short);
+	bind[1].length = &countryIdLength;
+	bind[1].is_unsigned = 1;
+	bind[1].is_null = &is_null[0];
+	bind[1].error = &error[0];
 
 	bind[2].buffer_type = MYSQL_TYPE_DATETIME;
 	bind[2].buffer = (void *) &lastUpdate;
+	bind[2].buffer_length = sizeof(MYSQL_TYPE_DATETIME);
+	bind[2].length = &lastUpdateLength;
 	bind[2].is_null = &is_null[2];
+	bind[2].error = &error[2];
 	
-	char thisCountry[STRING_SIZE];
-	unsigned long thisCountryLen;
-
-	param[0].buffer_type = MYSQL_TYPE_STRING;
-	param[0].buffer = (char *)thisCountry;
-	param[0].buffer_length = STRING_SIZE;
-	param[0].is_null = 0;
-	param[0].length = &thisCountryLen;
-
-	cout << "binding parameters" << endl;
-	if (mysql_stmt_bind_param(stmt, param) != 0) {
-		print_stmt_error(stmt, "Could not bind SELECT params");
-		return 1;
-	}
-
 	cout << "binding results" << endl;
 	if (mysql_stmt_bind_result(stmt, bind) != 0) {
 		print_stmt_error(stmt, "Count not bind SELECT results");
 		return 1;
 	}
-
-	strncpy(thisCountry, "Canada", STRING_SIZE);
-	thisCountryLen = strlen(thisCountry);
 
 	cout << "executing statement" << endl;
 	if (mysql_stmt_execute(stmt) != 0) {
