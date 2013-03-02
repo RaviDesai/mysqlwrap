@@ -17,7 +17,7 @@ TEST_LIBRARY_SOURCES :=
 LIBRARY_TYPE :=
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
-EMBEDDED := 
+EMBEDDED := embedded
 DYLD_LIBRARY_PATH = /usr/local/mysql/lib
 export DYLD_LIBRARY_PATH
 
@@ -109,7 +109,7 @@ ifeq ($(LIBRARY_TYPE),dynamic)
 	endif
 endif
 
-COVERAGE :=  -g -O0
+COVERAGE :=  -g3 -O0
 COVERAGELIB := 
 
 # end of variables - start of targets
@@ -167,7 +167,7 @@ endif
 $(PROGRAM_BINARY): $(LIBRARY_FILE)
 
 $(PROGRAM_BINARY): % : %$(OBJ)
-	g++ -Wall $(<) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH)
+	g++ -Wall $(<) $(COVERAGE) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH)
 	@g++ -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))

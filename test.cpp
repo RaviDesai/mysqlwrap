@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	cout << "embedded: " << embedded << endl;
 
 	LibraryInitializer di(embedded);
-	ThreadInitializer ti();
+	ThreadInitializer ti;
 
 	int failures = 0;
 	TestImport ts0;

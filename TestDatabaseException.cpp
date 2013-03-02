@@ -26,12 +26,9 @@ void TestDatabaseException::Test1(bool embedded) {
 void TestDatabaseException::Test2(bool embedded) {
 	cout << __PRETTY_FUNCTION__ << endl;
 
-	cout << "before init" << endl;
 	MYSQL *db = mysql_init(NULL);
-	cout << "before real connect" << endl;
 	UTASSERT(mysql_real_connect(db, "localhost", "root", "", "baddb", 0, NULL, 0) == NULL)
 	DatabaseException de(db, "initial");
-	cout << "de: " << de << endl;
 
 	stringstream ss;
 	ss << de;

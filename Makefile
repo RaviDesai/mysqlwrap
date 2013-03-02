@@ -14,10 +14,10 @@ TEST_PROGRAM_SOURCE := test.cpp
 LIBRARY_NAME := dbwrap
 LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp
 TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp TestImport.cpp
-LIBRARY_TYPE := dynamic
+LIBRARY_TYPE := static
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
-EMBEDDED := embedded
+EMBEDDED := 
 DYLD_LIBRARY_PATH = /usr/local/mysql/lib
 export DYLD_LIBRARY_PATH
 
@@ -40,6 +40,7 @@ EXE :=
 DEP := .d
 USE_RPATH := yes
 USE_INSTALLDIR := yes
+G++ := clang++ --std=gnu++11
 
 #
 # Variables used internally by make
@@ -109,23 +110,33 @@ ifeq ($(LIBRARY_TYPE),dynamic)
 	endif
 endif
 
-COVERAGE :=  -g -O0
-COVERAGELIB := 
+COVERAGE :=  -g -O0 -ftest-coverage -fprofile-arcs 
+COVERAGELIB := -lprofile_rt
 
 # end of variables - start of targets
 
-.PHONY: all clean deliver cleanall run
+.PHONY: all clean deliver cleanall run cleancover cover
 .PRECIOUS: $(LIBRARY_OBJECTS)
 
 all: $(PROGRAM_BINARY) $(TEST_PROGRAM_BINARY)
 
-clean:
+cleancover:
+	rm -rf cover
+
+clean: cleancover
 	rm -f $(PROGRAM_OBJECT) $(PROGRAM_BINARY) $(LIBRARY_OBJECTS) $(LIBRARY_FILE) $(TEST_PROGRAM_BINARY) $(TEST_PROGRAM_OBJECT) $(TEST_LIBRARY_OBJECTS)
 	rm -f $(DELIVERY_FOLDER)/*
+	rm -f $(INTERMEDIATE_FOLDER)/*.gcda $(INTERMEDIATE_FOLDER)/*.gcno $(INTERMEDIATE_FOLDER)/*.gcov
 
 
-cleanall: clean
+cleanall: clean 
 	rm -f $(INTERMEDIATE_FOLDER)*.d
+
+cover: runtest
+	@mkdir -p cover
+	rm -rf cover/mysqlwrap
+	geninfo . --no-checksum --output-filename cover/test.info
+	genhtml -o cover/mysqlwrap cover/test.info
 
 deliver: all
 	@mkdir -p $(DELIVERY_FOLDER)
@@ -162,8 +173,8 @@ createdb:
 	
 	
 $(INTERMEDIATE_FOLDER)%$(OBJ): %$(CPP)
-	g++ -Wall $(COVERAGE) -c $< $(CPP_INCDIR) -o $@
-	@g++ -MM $< $(CPP_INCDIR) > $(@:$(OBJ)=$(DEP))
+	$(G++) -Wall $(COVERAGE) -c $< $(CPP_INCDIR) -o $@
+	@$(G++) -MM $< $(CPP_INCDIR) > $(@:$(OBJ)=$(DEP))
 	@mv -f $(@:$(OBJ)=$(DEP)) $(@:$(OBJ)=$(DEP).tmp)
 	@sed -e 's|.*:|$(@):|' < $(@:$(OBJ)=$(DEP).tmp) > $(@:$(OBJ)=$(DEP))
 	@sed -e 's/.*://' -e 's/\\$$//' < $(@:$(OBJ)=$(DEP).tmp) | fmt -1 | \
@@ -177,8 +188,8 @@ endif
 $(PROGRAM_BINARY): $(LIBRARY_FILE)
 
 $(PROGRAM_BINARY): % : %$(OBJ)
-	g++ -Wall $(<) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH)
-	@g++ -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
+	$(G++) -Wall $(<) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH) $(COVERAGELIB)
+	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
 	@rm $(<:$(OBJ)=.tmp)
@@ -188,22 +199,22 @@ $(TEST_PROGRAM_BINARY): $(LIBRARY_FILE)
 $(TEST_PROGRAM_BINARY): $(TEST_LIBRARY_OBJECTS)
 
 $(TEST_PROGRAM_BINARY): % : %$(OBJ) 
-	g++ -Wall $(COVERAGE)  $(<) $(LIBRARY_SWITCH) $(COVERAGELIB) $(TEST_LIBRARY_OBJECTS) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH)
-	@g++ -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
+	$(G++) -Wall  $(<) $(LIBRARY_SWITCH) $(TEST_LIBRARY_OBJECTS) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
+	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
 	@rm $(<:$(OBJ)=.tmp)
 
 %$(ARS): $(LIBRARY_OBJECTS)
 	ar -crs $(LIBRARY_FILE) $(LIBRARY_OBJECTS)
-	@g++ -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
+	@$(G++) -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
 	@mv $(ARCHIVE_DEPEND) $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 	@sed "s|^.*:|$(@):|" $(ARCHIVE_DEPEND:$(DEP)=.tmp) > $(ARCHIVE_DEPEND)
 	@rm $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 
 %$(DYS): $(LIBRARY_OBJECTS)
-	g++ -Wall $(COVERAGE) -shared $(CPP_INCDIR) $(LIBRARY_OBJECTS) $(COVERAGELIB) -o $(@) $(CPP_LIBDIR) $(INSTALLDIR)
-	@g++ -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
+	$(G++) -Wall $(COVERAGE) -shared $(CPP_INCDIR) $(LIBRARY_OBJECTS) $(COVERAGELIB) -o $(@) $(CPP_LIBDIR) $(INSTALLDIR) $(COVERAGELIB)
+	@$(G++) -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
 	@mv $(ARCHIVE_DEPEND) $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 	@sed "s|^.*:|$(@):|" $(ARCHIVE_DEPEND:$(DEP)=.tmp) > $(ARCHIVE_DEPEND)
 	@rm $(ARCHIVE_DEPEND:$(DEP)=.tmp)
