@@ -26,6 +26,7 @@ void TestDatabaseException::Test1(bool embedded) {
 void TestDatabaseException::Test2(bool embedded) {
 	cout << __PRETTY_FUNCTION__ << endl;
 
+	if (embedded) return;
 	MYSQL *db = mysql_init(NULL);
 	UTASSERT(mysql_real_connect(db, "localhost", "root", "", "baddb", 0, NULL, 0) == NULL)
 	DatabaseException de(db, "initial");
@@ -42,6 +43,7 @@ void TestDatabaseException::Test2(bool embedded) {
 void TestDatabaseException::Test3(bool embedded) {
 	cout << __PRETTY_FUNCTION__ << endl;
 
+	if (embedded) return;
 	MYSQL *db = mysql_init(NULL);
 	UTASSERT(mysql_real_connect(db, "localhost", "root", "", "sakila", 0, NULL, 0) != NULL)
 	MYSQL_STMT *stmt = mysql_stmt_init(db);

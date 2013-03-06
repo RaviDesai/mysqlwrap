@@ -14,7 +14,7 @@ using namespace MySQLWrap;
 int main(int argc, char** argv)
 {
 	cout << "Begin Test Suite" << endl;
-	bool embedded = false;
+	bool embedded = true;
 	cout << "embedded: " << embedded << endl;
 
 	LibraryInitializer di(embedded);

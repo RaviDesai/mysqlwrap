@@ -330,6 +330,55 @@ void TestDatabase::Test7() {
 	UTASSERT(! wasCaught);	
 }
 
+void TestDatabase::Test8() {
+	cout << __PRETTY_FUNCTION__ << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db_initial("localhost", "root", "", "sakila", 0, NULL, 0);
+		Database db(db_initial);
+		db.Connect();
+
+		UTASSERT(db.IsConnected());	
+
+		Statement stmt(db, "SELECT * from COUNTRY");
+		stmt.Execute();
+
+		int testId = 0;
+		std::string lastCountry;
+		
+		while (stmt.FetchNextRow()) {
+			testId++;
+			Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
+			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
+			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+
+			UTASSERT(testId == (*countryId));	
+			UTASSERT(lastUpdate->year == 2006);
+			UTASSERT(lastUpdate->month == 2);
+			UTASSERT(lastUpdate->day == 15);
+			
+			if (testId > 1) {
+				UTASSERT(countryName.deref() > lastCountry);
+			}
+			lastCountry = countryName.deref();
+		}
+
+		UTASSERT(testId == 109);
+
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		cout << fail << endl;
+		wasCaught = true;
+	} catch (...) { 
+		cout << "random exception caught" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
+}
 int TestDatabase::RunSpecificTest(DatabaseMemberPointer test) {
 	int failures = 0;
 	try {
@@ -358,6 +407,7 @@ int TestDatabase::RunTests(bool embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test5);
 		failures += RunSpecificTest(&TestDatabase::Test6);
 		failures += RunSpecificTest(&TestDatabase::Test7);
+		failures += RunSpecificTest(&TestDatabase::Test8);
 	}
 	return failures;
 }

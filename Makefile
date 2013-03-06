@@ -11,10 +11,11 @@
 
 PROGRAM_SOURCE := program.cpp bug.cpp
 TEST_PROGRAM_SOURCE := test.cpp
+TEST_EMBEDDED_SOURCE := testemb.cpp
 LIBRARY_NAME := dbwrap
 LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp
 TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp TestImport.cpp
-LIBRARY_TYPE := static
+LIBRARY_TYPE := dynamic
 DELIVERY_FOLDER := bin
 INTERMEDIATE_FOLDER := build
 EMBEDDED := 
@@ -54,10 +55,14 @@ INTERMEDIATE_FOLDER := $(addsuffix /,$(INTERMEDIATE_FOLDER))
 
 PROGRAM_OBJECT := $(addprefix $(INTERMEDIATE_FOLDER),$(PROGRAM_SOURCE:$(CPP)=$(OBJ)))
 TEST_PROGRAM_OBJECT := $(addprefix $(INTERMEDIATE_FOLDER),$(TEST_PROGRAM_SOURCE:$(CPP)=$(OBJ)))
+TEST_EMBEDDED_OBJECT := $(addprefix $(INTERMEDIATE_FOLDER),$(TEST_EMBEDDED_SOURCE:$(CPP)=$(OBJ)))
 PROGRAM_BINARY := $(PROGRAM_OBJECT:$(OBJ)=$(EXE))
 TEST_PROGRAM_BINARY := $(TEST_PROGRAM_OBJECT:$(OBJ)=$(EXE))
+TEST_EMBEDDED_BINARY := $(TEST_EMBEDDED_OBJECT:$(OBJ)=$(EXE))
 LIBRARY_OBJECTS := $(addprefix $(INTERMEDIATE_FOLDER),$(LIBRARY_SOURCES:$(CPP)=$(OBJ)))
 TEST_LIBRARY_OBJECTS := $(addprefix $(INTERMEDIATE_FOLDER),$(TEST_LIBRARY_SOURCES:$(CPP)=$(OBJ)))
+DYNAMIC_LIBRARY := $(addprefix $(INTERMEDIATE_FOLDER), $(DYP)$(LIBRARY_NAME)$(DYS))
+STATIC_LIBRARY := $(addprefix $(INTERMEDIATE_FOLDER), $(ARP)$(LIBRARY_NAME)$(ARS))
 
 BUG_REPORT_BINARY := $(addprefix $(INTERMEDIATE_FOLDER), bug)
 
@@ -69,7 +74,8 @@ ifeq ($(LIBRARY_TYPE),static)
 	LIBRARY_FILE := $(addprefix $(INTERMEDIATE_FOLDER),$(ARP)$(LIBRARY_NAME)$(ARS))
 	ARCHIVE_DEPEND := $(LIBRARY_FILE:$(ARS)=$(DEP)) 
 	INSTALLIR :=
-	LIBRARY_SWITCH := -l$(LIBRARY_NAME)
+	LIBRARY_SWITCH := -static -l$(LIBRARY_NAME)
+	LIBRARY_SWITCH_TEST := -static -l$(LIBRARY_NAME)
 else 
 	ifeq ($(LIBRARY_TYPE),dynamic)
 		LIBRARY_FILE := $(addprefix $(INTERMEDIATE_FOLDER),$(DYP)$(LIBRARY_NAME)$(DYS))
@@ -79,26 +85,32 @@ else
 		else
 			INSTALLDIR :=
 		endif
-		LIBRARY_SWITCH := -l$(LIBRARY_NAME)
+		LIBRARY_SWITCH := -shared -l$(LIBRARY_NAME)
+		LIBRARY_SWITCH_TEST := -l$(LIBRARY_NAME)
 	else
-		LIBRARY_FILE ;=
-		ACHIVE_DEPEND ;=
+		LIBRARY_FILE :=
+		ACHIVE_DEPEND :=
 		INSTALLIR :=
 		LIBRARY_SWITCH := $(LIBRARY_OBJECTS)
+		LIBRARY_SWITCH_TEST := $(LIBRARY_OBJECTS)
 	endif
 endif
 
 PROGRAM_DEPEND := $(PROGRAM_OBJECT:$(OBJ)=$(DEP))
 TEST_PROGRAM_DEPEND := $(TEST_PROGRAM_OBJECT:$(OBJ)=$(DEP))
+TEST_EMBEDDED_DEPEND := $(TEST_PROGRAM_OBJECT:$(OBJ)=$(DEP))
 LIBRARY_DEPEND := $(LIBRARY_OBJECTS:$(OBJ)=$(DEP))
 
 CPP_INCDIR := ${shell /usr/local/mysql/bin/mysql_config --cflags}
 CPP_RPATH := -Wl,-rpath,/usr/local/mysql/lib
 
+MYSQL_EMBEDDED_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}
+MYSQL_CLIENT_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libs_r}
+
 ifeq ($(EMBEDDED),embedded)
-CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}
+CPP_LIBDIR := $(MYSQL_EMBEDDED_LIBDIR)
 else
-CPP_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libs_r}
+CPP_LIBDIR := $(MYSQL_CLIENT_LIBDIR)
 endif
 
 
@@ -115,28 +127,27 @@ COVERAGELIB := -lprofile_rt
 
 # end of variables - start of targets
 
-.PHONY: all clean deliver cleanall run cleancover cover
+.PHONY: all clean deliver cleanall run cleancover cover runtest
 .PRECIOUS: $(LIBRARY_OBJECTS)
 
-all: $(PROGRAM_BINARY) $(TEST_PROGRAM_BINARY)
+all: $(PROGRAM_BINARY) $(TEST_PROGRAM_BINARY) $(STATIC_LIBRARY) $(DYNAMIC_LIBRARY) $(TEST_EMBEDDED_BINARY)
 
 cleancover:
 	rm -rf cover
+	rm -f $(INTERMEDIATE_FOLDER)*.gcda $(INTERMEDIATE_FOLDER)*.gcno
 
-clean: cleancover
+clean: 
 	rm -f $(PROGRAM_OBJECT) $(PROGRAM_BINARY) $(LIBRARY_OBJECTS) $(LIBRARY_FILE) $(TEST_PROGRAM_BINARY) $(TEST_PROGRAM_OBJECT) $(TEST_LIBRARY_OBJECTS)
+	rm -f $(TEST_EMBEDDED_BINARY) $(TEST_EMBEDDED_OBJECT)
 	rm -f $(DELIVERY_FOLDER)/*
-	rm -f $(INTERMEDIATE_FOLDER)/*.gcda $(INTERMEDIATE_FOLDER)/*.gcno $(INTERMEDIATE_FOLDER)/*.gcov
+	rm -f $(STATIC_LIBRARY) $(DYNAMIC_LIBRARY)
 
-
-cleanall: clean 
+cleanall: clean cleancover
 	rm -f $(INTERMEDIATE_FOLDER)*.d
 
 cover: runtest
-	@mkdir -p cover
-	rm -rf cover/mysqlwrap
-	geninfo . --no-checksum --output-filename cover/test.info
-	genhtml -o cover/mysqlwrap cover/test.info
+	lcov -a cover/test.info -a cover/testemb.info -o cover/testagg.info
+	genhtml -o cover/mysqlwrap cover/testagg.info
 
 deliver: all
 	@mkdir -p $(DELIVERY_FOLDER)
@@ -152,9 +163,15 @@ run: deliver
 		echo "-----------------------------\n"; \
 	done
 
-runtest: $(TEST_PROGRAM_BINARY)
+runtest: $(TEST_PROGRAM_BINARY) $(TEST_EMBEDDED_BINARY)
+	@mkdir -p cover
 	@for progs in $(TEST_PROGRAM_BINARY); do \
+		$$progs ; \
+		lcov -o cover/test.info -c -d . ; \
+	done
+	@for progs in $(TEST_EMBEDDED_BINARY); do \
 		$$progs $(EMBEDDED) ; \
+		lcov -o cover/testemb.info -c -d . ; \
 	done
 	
 runbug: $(BUG_REPORT_BINARY)
@@ -194,19 +211,30 @@ $(PROGRAM_BINARY): % : %$(OBJ)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
 	@rm $(<:$(OBJ)=.tmp)
 
-$(TEST_PROGRAM_BINARY): $(LIBRARY_FILE)
+$(TEST_EMBEDDED_BINARY): $(STATIC_LIBRARY)
+
+$(TEST_EMBEDDED_BINARY): $(TEST_LIBRARY_OBJECTS)
+
+$(TEST_EMBEDDED_BINARY): % : %$(OBJ) 
+	$(G++) -Wall  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_EMBEDDED_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
+	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
+	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
+	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
+	@rm $(<:$(OBJ)=.tmp)
+
+$(TEST_PROGRAM_BINARY): $(STATIC_LIBRARY)
 
 $(TEST_PROGRAM_BINARY): $(TEST_LIBRARY_OBJECTS)
 
 $(TEST_PROGRAM_BINARY): % : %$(OBJ) 
-	$(G++) -Wall  $(<) $(LIBRARY_SWITCH) $(TEST_LIBRARY_OBJECTS) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
+	$(G++) -Wall  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_CLIENT_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
 	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
 	@rm $(<:$(OBJ)=.tmp)
 
 %$(ARS): $(LIBRARY_OBJECTS)
-	ar -crs $(LIBRARY_FILE) $(LIBRARY_OBJECTS)
+	ar -crs $(@) $(LIBRARY_OBJECTS)
 	@$(G++) -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
 	@mv $(ARCHIVE_DEPEND) $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 	@sed "s|^.*:|$(@):|" $(ARCHIVE_DEPEND:$(DEP)=.tmp) > $(ARCHIVE_DEPEND)

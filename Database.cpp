@@ -56,6 +56,7 @@ Database::Database(const Database &db) {
 	_unixSocket = db._unixSocket;
 	_clientFlag = db._clientFlag;
 	_initialCommand = db._initialCommand;
+	_autocommit = db._autocommit;
 
 	if ((_db = mysql_init(NULL)) == NULL) {
 		throw DatabaseException("Error trying to initialize MYSQL database", 0, "----", "insufficient memory");
@@ -70,9 +71,9 @@ Database::Database(const Database &db) {
 		}
 	}
 
-	if (db._autocommit) {
+	if (! _autocommit) {
 		try {
-			Autocommit(db._autocommit);
+			Autocommit(_autocommit);
 		} catch (DatabaseException &) {
 			mysql_close(_db);
 			throw;
@@ -266,7 +267,7 @@ void Database::Source(const string &fileName) {
 				UseDatabase(cmd);
 				continue;
 			}
-			
+
 			delimpos = cmd.find("DELIMITER ");
 			if (delimpos != std::string::npos && delimpos == 0) {
 				delimiter = cmd.erase(0, 10);
