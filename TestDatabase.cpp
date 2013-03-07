@@ -379,6 +379,29 @@ void TestDatabase::Test8() {
 
 	UTASSERT(! wasCaught);	
 }
+
+void TestDatabase::Test9() {
+	cout << __PRETTY_FUNCTION__ << endl;
+	bool wasCaught = false;
+	try {
+		Database db_initial("localhost", "root", "", "sakila", 0, NULL, 0);
+		db_initial.Connect();
+		Database db(db_initial);
+		UTASSERT(db.IsConnected());
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		cout << fail << endl;
+		wasCaught = true;
+	} catch (...) { 
+		cout << "random exception caught" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
+}
+
 int TestDatabase::RunSpecificTest(DatabaseMemberPointer test) {
 	int failures = 0;
 	try {
@@ -408,6 +431,7 @@ int TestDatabase::RunTests(bool embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test6);
 		failures += RunSpecificTest(&TestDatabase::Test7);
 		failures += RunSpecificTest(&TestDatabase::Test8);
+		failures += RunSpecificTest(&TestDatabase::Test9);
 	}
 	return failures;
 }

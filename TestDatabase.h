@@ -24,6 +24,7 @@ private:
 	void Test6();
 	void Test7();
 	void Test8();
+	void Test9();
 
 	int RunSpecificTest(DatabaseMemberPointer test);
 };
