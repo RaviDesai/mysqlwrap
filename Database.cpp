@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <fstream>
+#include <cwchar>
+#include <locale>
 
 using namespace std;
 
@@ -97,6 +99,11 @@ void Database::Connect() {
 		}
 	}
 	_isConnected = true;
+
+	if (mysql_set_character_set(_db, "utf8") != 0)
+	{
+		throw DatabaseException(_db, "Error in DatabaseConnect");
+	}	
 }
 
 void Database::SetInitialCommand(const std::string &initialCommand) {
@@ -165,9 +172,6 @@ void Database::LibraryInitialize(bool embedded) {
 			throw DatabaseException("Error in Database::Initialize", 0, "----", "Failure to initialize the database library");
 		}
 	} else {
-		/*
---basedir=/usr/local/mysql --datadir=/Users/ravidesai/mysql/data --plugin-dir=/Users/ravidesai/mysql/plugins --log-error=/Users/ravidesai/mysql/tmp/test.err --pid-file=/Users/ravidesai/mysql/tmp/test.pid
-		*/
 		static const char *server_args[] = { "this_program", "--basedir=/usr/local/mysql", "--datadir=/Users/ravidesai/mysql/data", 
 						     "--plugin-dir=/Users/ravidesai/mysql/plugins", "--log-error=/Users/ravidesai/mysql/tmp/test.err",
 						     "--pid-file=/Users/ravidesai/mysql/tmp/test.pid",
@@ -181,6 +185,8 @@ void Database::LibraryInitialize(bool embedded) {
 			throw DatabaseException("Error in Database::Initialize", 0, "----", "Failure to initialize the database library");
 		}
 	}
+
+	cout << setlocale(LC_ALL, "") << endl;
 }
 
 void Database::ThreadInitialize() { 

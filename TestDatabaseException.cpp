@@ -14,13 +14,13 @@ TestDatabaseException::TestDatabaseException() {}
 void TestDatabaseException::Test1(bool embedded) {
 	cout << __PRETTY_FUNCTION__ << endl;
 	
-	DatabaseException de("initial", 1, "9988", "end");
+	DatabaseException de("initial", 0, "9988", "end");
 	stringstream ss;
 	ss << de << endl;
 	char line[512];
 	ss.getline(line, 512);
 
-	UTASSERT(strcmp(line, "initial ERROR 1(9988) end") == 0);
+	UTASSERT(strcmp(line, "initial ERROR 0(9988) end") == 0);
 }
 
 void TestDatabaseException::Test2(bool embedded) {

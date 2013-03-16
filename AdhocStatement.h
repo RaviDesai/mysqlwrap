@@ -22,6 +22,7 @@ namespace MySQLWrap {
 		unsigned long long NumberOfAffectedRows();
 		operator bool();
 		unsigned long long NumberOfReturnedRows();
+		unsigned int RemainingParameters();
 
 		Nullable<char> GetTinyDataInRow(unsigned int column);
 		Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
@@ -56,6 +57,7 @@ namespace MySQLWrap {
 
 	private:
 		void Prepare();
+		void ScanForInsertions();
 		Nullable<std::string> GetStringDataInRowInternal(unsigned int column);
 
 		unsigned int _numberResultColumns;
@@ -72,6 +74,8 @@ namespace MySQLWrap {
 		std::string _sqlStatement;
 		bool _resultWasStored;
 		bool _eof;
+		unsigned int _numberParams;
+		std::vector<ParamBuffer*> _params;
 	};
 
 	AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel&);

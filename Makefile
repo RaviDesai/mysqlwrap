@@ -21,6 +21,8 @@ INTERMEDIATE_FOLDER := build
 EMBEDDED := 
 DYLD_LIBRARY_PATH = /usr/local/mysql/lib
 export DYLD_LIBRARY_PATH
+#LC_ALL = C
+#export LC_ALL
 
 #
 # OS specific suffixes, prefixes, and switches used by make
@@ -41,7 +43,7 @@ EXE :=
 DEP := .d
 USE_RPATH := yes
 USE_INSTALLDIR := yes
-G++ := clang++ --std=gnu++11
+G++ := clang++ --std=gnu++11 -mmacosx-version-min=10.8 --stdlib=libstdc++
 
 #
 # Variables used internally by make
@@ -104,14 +106,16 @@ LIBRARY_DEPEND := $(LIBRARY_OBJECTS:$(OBJ)=$(DEP))
 CPP_INCDIR := ${shell /usr/local/mysql/bin/mysql_config --cflags}
 CPP_RPATH := -Wl,-rpath,/usr/local/mysql/lib
 
-MYSQL_EMBEDDED_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}
+MYSQL_EMBEDDED_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libmysqld-libs}-debug
 MYSQL_CLIENT_LIBDIR := ${shell /usr/local/mysql/bin/mysql_config --libs_r}
 
 ifeq ($(EMBEDDED),embedded)
-CPP_LIBDIR := $(MYSQL_EMBEDDED_LIBDIR)
+CPP_LIBDIR := $(MYSQL_EMBEDDED_LIBDIR) 
 else
-CPP_LIBDIR := $(MYSQL_CLIENT_LIBDIR)
+CPP_LIBDIR := $(MYSQL_CLIENT_LIBDIR) 
 endif
+
+CPP11_LIB := 
 
 
 ifeq ($(LIBRARY_TYPE),dynamic)
@@ -205,7 +209,7 @@ endif
 $(PROGRAM_BINARY): $(LIBRARY_FILE)
 
 $(PROGRAM_BINARY): % : %$(OBJ)
-	$(G++) -Wall $(<) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH) $(COVERAGELIB)
+	$(G++) -Wall $(<) $(CPP_INCDIR) $(LIBRARY_SWITCH) -o $(@) $(CPP_LIBDIR) $(CPP11_LIB) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(CPP_RPATH) $(COVERAGELIB)
 	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
@@ -216,7 +220,7 @@ $(TEST_EMBEDDED_BINARY): $(STATIC_LIBRARY)
 $(TEST_EMBEDDED_BINARY): $(TEST_LIBRARY_OBJECTS)
 
 $(TEST_EMBEDDED_BINARY): % : %$(OBJ) 
-	$(G++) -Wall  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_EMBEDDED_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
+	$(G++) -Wall -g -O0  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_EMBEDDED_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB) $(CPP11_LIB)
 	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
@@ -227,7 +231,7 @@ $(TEST_PROGRAM_BINARY): $(STATIC_LIBRARY)
 $(TEST_PROGRAM_BINARY): $(TEST_LIBRARY_OBJECTS)
 
 $(TEST_PROGRAM_BINARY): % : %$(OBJ) 
-	$(G++) -Wall  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_CLIENT_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB)
+	$(G++) -Wall -g -O0  $(<) $(LIBRARY_SWITCH_TEST) $(TEST_LIBRARY_OBJECTS) -o $(@) $(MYSQL_CLIENT_LIBDIR) -L$(INTERMEDIATE_FOLDER) $(RPATH) $(COVERAGELIB) $(CPP11_LIB)
 	@$(G++) -MM $(CPP_INCDIR) $(notdir $(<:$(OBJ)=$(CPP))) > $(<:$(OBJ)=$(DEP))
 	@mv $(<:$(OBJ)=$(DEP)) $(<:$(OBJ)=.tmp)
 	@sed "s|^.*:|$(@):|" $(<:$(OBJ)=.tmp) > $(<:$(OBJ)=$(DEP))
@@ -241,7 +245,7 @@ $(TEST_PROGRAM_BINARY): % : %$(OBJ)
 	@rm $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 
 %$(DYS): $(LIBRARY_OBJECTS)
-	$(G++) -Wall $(COVERAGE) -shared $(CPP_INCDIR) $(LIBRARY_OBJECTS) $(COVERAGELIB) -o $(@) $(CPP_LIBDIR) $(INSTALLDIR) $(COVERAGELIB)
+	$(G++) -Wall $(COVERAGE) -shared $(CPP_INCDIR) $(LIBRARY_OBJECTS) $(COVERAGELIB) -o $(@) $(CPP_LIBDIR) $(CPP11_LIB) $(INSTALLDIR) $(COVERAGELIB)
 	@$(G++) -MM $(CPP_INCDIR) $(LIBRARY_SOURCES) > $(ARCHIVE_DEPEND)
 	@mv $(ARCHIVE_DEPEND) $(ARCHIVE_DEPEND:$(DEP)=.tmp)
 	@sed "s|^.*:|$(@):|" $(ARCHIVE_DEPEND:$(DEP)=.tmp) > $(ARCHIVE_DEPEND)

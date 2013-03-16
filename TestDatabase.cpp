@@ -76,6 +76,62 @@ void TestDatabase::Test2AdHoc() {
 	} catch (const UTFail &fail) {
 		cout << fail << endl;
 		wasCaught = true;
+	} catch (const std::exception &exp) {
+		cout << exp.what() << endl;
+		wasCaught = true;
+	} catch (...) { 
+		cout << "random exception caught" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);	
+}
+
+void TestDatabase::Test2AdHoc2() {
+	cout << __PRETTY_FUNCTION__ << endl;
+	
+	bool wasCaught = false;
+	try {
+		Database db("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		UTASSERT(db.IsConnected());	
+
+		string sql = "SELECT * FROM COUNTRY WHERE COUNTRY = '\xC2\xA1\xC2\xBFHasta ma\xC3\xB1\x61na!?'";
+
+		AdhocStatement stmt(db, sql);
+		UTASSERT(stmt.RemainingParameters() == 0);
+		stmt.Execute();
+
+		UTASSERT(! stmt.FetchNextRow());
+
+		sql = "SELECT * FROM COUNTRY WHERE COUNTRY = ?";
+		AdhocStatement stmt2(db, sql);
+		UTASSERT(stmt2.RemainingParameters() == 1);
+
+		bool stmt2WasCaught = false;
+		try {
+			stmt2.Execute();
+		} catch (const DatabaseException &de) {
+			stmt2WasCaught = true;	
+			char stmt2line[512];
+			std::stringstream ss;
+			ss << de << endl;
+			ss.getline(stmt2line, 512);
+			UTASSERT(strcmp(stmt2line, "Error in AdhocStatement::Execute ERROR 0(----) There are stil some unsatisfied parameters") == 0);
+		}
+
+		UTASSERT(stmt2WasCaught == true);
+
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		cout << fail << endl;
+		wasCaught = true;
+	} catch (const std::exception &exp) {
+		cout << exp.what() << endl;
+		wasCaught = true;
 	} catch (...) { 
 		cout << "random exception caught" << endl;
 		wasCaught = true;
@@ -421,9 +477,11 @@ int TestDatabase::RunTests(bool embedded) {
 	if (embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test1);
 		failures += RunSpecificTest(&TestDatabase::Test2AdHoc);
+		failures += RunSpecificTest(&TestDatabase::Test2AdHoc2);
 	} else {
 		failures += RunSpecificTest(&TestDatabase::Test1);
 		failures += RunSpecificTest(&TestDatabase::Test2AdHoc);
+		failures += RunSpecificTest(&TestDatabase::Test2AdHoc2);
 		failures += RunSpecificTest(&TestDatabase::Test2);
 		failures += RunSpecificTest(&TestDatabase::Test3);
 		failures += RunSpecificTest(&TestDatabase::Test4);

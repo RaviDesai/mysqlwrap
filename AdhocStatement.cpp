@@ -1,8 +1,11 @@
 #include "AdhocStatement.h"
 #include "DatabaseException.h"
 
-#include <string>
 #include <stdio.h>
+#include <iostream>
+#include <string>
+#include <cwchar>
+#include <locale>
 
 using namespace std;
 
@@ -15,6 +18,7 @@ AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) {
 	_numberResultColumns = 0;
 	_numberAffectedRows = 0;
 	_numberResultRows = 0;
+	_numberParams = 0;
 
 	_resultWasStored = false;
 	_eof = true;
@@ -29,6 +33,7 @@ AdhocStatement::AdhocStatement(const AdhocStatement &stmt) {
 	_numberResultColumns = 0;
 	_numberAffectedRows = 0;
 	_numberResultRows = 0;
+	_numberParams = stmt._numberParams;
 
 	_resultWasStored = false;
 	_eof = true;
@@ -48,17 +53,55 @@ AdhocStatement::~AdhocStatement() {
 	
 	_resultWasStored = false;
 	_eof = true;
+
+	while (! _params.empty()) {
+		ParamBuffer *buf = _params.back();
+		_params.pop_back();
+		delete buf;
+	}	
+}
+
+void AdhocStatement::ScanForInsertions() {
+	wchar_t dest[_sqlStatement.length() * sizeof(wchar_t)];
+	memset(dest, 0, sizeof(dest));
+	size_t charsWritten = mbstowcs(dest, _sqlStatement.c_str(), 512);
+	std::wstring _sqlStatementWide(dest, charsWritten);
+	wchar_t insideQuote = L'\0';
+	for (auto it = _sqlStatementWide.begin(); it != _sqlStatementWide.end(); it++) {
+		if ((*it == L'\'') || (*it == L'"')) {
+			if (insideQuote == *it) {
+				insideQuote = L'\0';
+			} else {
+				insideQuote = *it;
+			}
+		}
+		if (*it == L'?') {
+			if (insideQuote == L'\0') {
+				 _numberParams += 1;
+			}
+		}
+	}
+}
+
+unsigned int AdhocStatement::RemainingParameters() {
+	return _numberParams - _params.size();	
 }
 
 void AdhocStatement::Prepare() {
+	_result = NULL;
+	ScanForInsertions();
+}
+
+void AdhocStatement::Execute() {
+	if (RemainingParameters() != 0) {
+		throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "There are stil some unsatisfied parameters");
+	}
+
 	if (mysql_real_query(_dbcopy, _sqlStatement.data(), _sqlStatement.length()) != 0) {
 		throw DatabaseException(_dbcopy, "Error in AdhocStatement::Prepare");
 	}
 
 	_numberResultColumns = mysql_field_count(_dbcopy);
-}
-
-void AdhocStatement::Execute() {
 	_result = mysql_store_result(_dbcopy);
 	
 	if (_result == NULL && _numberResultColumns > 0) {
@@ -257,7 +300,7 @@ Nullable<string> AdhocStatement::GetStringDataInRow(unsigned int column) {
 Nullable<string> AdhocStatement::GetStringDataInRowInternal(unsigned int column) {
 	Nullable<string> result;
 	if (column >= _numberResultColumns) { 
-		throw DatabaseException("Error in AdhocStatement::GetStringDataInRowInternal", column, "----", "column requested outside of range of result set");
+		throw DatabaseException("Error in AdhocStatement::GetStringDataInRowInternal", 0, "----", "column requested outside of range of result set");
 	}
 
 	if (_currentRow[column] != NULL) {
@@ -270,7 +313,7 @@ Nullable<string> AdhocStatement::GetStringDataInRowInternal(unsigned int column)
 Nullable<Binary> AdhocStatement::GetBinaryDataInRow(unsigned int column) {
 	Nullable<Binary> result;
 	if (column >= _numberResultColumns) { 
-		throw DatabaseException("Error in AdhocStatement::GetBinaryDataInRow", column, "----", "column requested outside of range of result set");
+		throw DatabaseException("Error in AdhocStatement::GetBinaryDataInRow", 0, "----", "column requested outside of range of result set");
 	}
 
 	if ((_fields[column].type != MYSQL_TYPE_BLOB) &&

@@ -2,7 +2,7 @@
 
 namespace MySQLWrap {
 
-DatabaseException::DatabaseException(const std::string &initialMessage, int errno, const char *sqlState, const char *errorMessage) {
+DatabaseException::DatabaseException(const std::string &initialMessage, const int errno, const char *sqlState, const char *errorMessage) {
 	_initialMessage = initialMessage;
 	_errno = errno;
 	_sqlState = sqlState;
@@ -29,3 +29,4 @@ std::ostream &operator<<(std::ostream &out, const DatabaseException &exp) {
 }
 
 }
+

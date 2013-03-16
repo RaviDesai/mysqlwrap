@@ -6,7 +6,7 @@
 namespace MySQLWrap {
 	class DatabaseException {
 	public:
-		DatabaseException(const std::string &initialMessage, int errno, const char *sqlState, const char *errorMessage);
+		DatabaseException(const std::string &initialMessage, const int errno, const char *sqlState, const char *errorMessage);
 		DatabaseException(MYSQL *db, const std::string &initialMessage);
 		DatabaseException(MYSQL_STMT *stmt, const std::string &initialMessage);
 
