@@ -1,12 +1,15 @@
 #pragma once
 
 #include <vector>
+
 #include "Database.h"
 #include "Statement.h"
 #include "ParamBuffer.h"
 #include "Nullable.h"
-#include <mysql_time.h>
+#include "AdhocParameter.h"
+
 #include <mysql.h>
+#include <mysql_time.h>
 
 namespace MySQLWrap {
 
@@ -17,6 +20,7 @@ namespace MySQLWrap {
 		virtual ~AdhocStatement();
 
 		void Execute();
+		void ResetParameters();
 		bool FetchNextRow();
 		bool Eof();
 		unsigned long long NumberOfAffectedRows();
@@ -36,6 +40,14 @@ namespace MySQLWrap {
 		Nullable<float> GetFloatDataInRow(unsigned int column);
 		Nullable<double> GetDoubleDataInRow(unsigned int column);
 
+		template<class X> void AssignNextParameter(const Nullable<X> &param) {
+			AdhocParameter *buffer = new AdhocParameter();
+			if (param.HasValue()) {
+				buffer->SetData(param.const_deref());
+			}
+			AssignNextParameter(buffer);
+		}
+
 		template <class X> AdhocStatement &operator>>(Nullable<X> &data) {
 			GetDataInRow(GetNextDataColumn(), data);
 			return *this;
@@ -54,11 +66,14 @@ namespace MySQLWrap {
 		void GetDataInRow(unsigned int column, Nullable<double> &data);
 
 		unsigned int GetNextDataColumn();
+		void StoreSqlStatement(const std::string &sqlStatement);
 
 	private:
 		void Prepare();
+		std::string ReplaceInsertions();
 		void ScanForInsertions();
 		Nullable<std::string> GetStringDataInRowInternal(unsigned int column);
+		void AssignNextParameter(AdhocParameter *value);
 
 		unsigned int _numberResultColumns;
 		unsigned int _currentColumn;
@@ -71,13 +86,19 @@ namespace MySQLWrap {
 		MYSQL_FIELD *_fields;
 		unsigned long* _currentRowLengths;
 
-		std::string _sqlStatement;
+		std::wstring _sqlStatement;
 		bool _resultWasStored;
 		bool _eof;
 		unsigned int _numberParams;
-		std::vector<ParamBuffer*> _params;
+		std::vector<AdhocParameter*> _params;
 	};
 
 	AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel&);
 	AdhocStatement &operator<<(AdhocStatement &stmt, const FetchSentinel&);
+	AdhocStatement &operator<<(AdhocStatement &stmt, const ResetSentinel&);
+
+	template <class X> AdhocStatement &operator<<(AdhocStatement &stmt, const Nullable<X> &param) {
+		stmt.AssignNextParameter(param);
+		return stmt;
+	}
 }

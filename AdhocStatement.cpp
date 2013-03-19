@@ -1,6 +1,7 @@
 #include "AdhocStatement.h"
 #include "DatabaseException.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -13,7 +14,6 @@ namespace MySQLWrap {
 
 AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) {
 	_dbcopy = db._db;
-	_sqlStatement = sqlStatement;
 	_currentColumn = 0;
 	_numberResultColumns = 0;
 	_numberAffectedRows = 0;
@@ -23,6 +23,7 @@ AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) {
 	_resultWasStored = false;
 	_eof = true;
 
+	StoreSqlStatement(sqlStatement);
 	Prepare();
 }
 
@@ -54,28 +55,28 @@ AdhocStatement::~AdhocStatement() {
 	_resultWasStored = false;
 	_eof = true;
 
-	while (! _params.empty()) {
-		ParamBuffer *buf = _params.back();
-		_params.pop_back();
-		delete buf;
-	}	
+	ResetParameters();
+}
+
+void AdhocStatement::StoreSqlStatement(const std::string &sqlStatement) {
+	wchar_t dest[sqlStatement.length() + 1];
+	memset(dest, 0, sizeof(dest));
+	size_t charsWritten = mbstowcs(dest, sqlStatement.c_str(), sqlStatement.length());
+	_sqlStatement = std::wstring(dest, charsWritten);
 }
 
 void AdhocStatement::ScanForInsertions() {
-	wchar_t dest[_sqlStatement.length() * sizeof(wchar_t)];
-	memset(dest, 0, sizeof(dest));
-	size_t charsWritten = mbstowcs(dest, _sqlStatement.c_str(), 512);
-	std::wstring _sqlStatementWide(dest, charsWritten);
 	wchar_t insideQuote = L'\0';
-	for (auto it = _sqlStatementWide.begin(); it != _sqlStatementWide.end(); it++) {
-		if ((*it == L'\'') || (*it == L'"')) {
-			if (insideQuote == *it) {
+	for (size_t i = 0; i < _sqlStatement.length(); i++) {
+		wchar_t it = _sqlStatement[i];
+		if ((it == L'\'') || (it == L'"')) {
+			if (insideQuote == it) {
 				insideQuote = L'\0';
-			} else {
-				insideQuote = *it;
+			} else if (insideQuote == L'\0') {
+				insideQuote = it;
 			}
 		}
-		if (*it == L'?') {
+		if (it == L'?') {
 			if (insideQuote == L'\0') {
 				 _numberParams += 1;
 			}
@@ -92,12 +93,47 @@ void AdhocStatement::Prepare() {
 	ScanForInsertions();
 }
 
+std::string AdhocStatement::ReplaceInsertions() {
+	std::stringstream result;
+	char buff[sizeof(wchar_t)];
+	unsigned int bufflen;
+	wchar_t insideQuote = L'\0';
+	unsigned int paramCount = 0;
+
+	for (auto it = _sqlStatement.begin(); it != _sqlStatement.end(); it++) {
+		if ((*it == L'\'') || (*it == L'"')) {
+			if (insideQuote == *it) {
+				insideQuote = L'\0';
+			} else if (insideQuote == L'\0') {
+				insideQuote = *it;
+			}
+			bufflen = wctomb(buff, *it);
+			result.write(buff, bufflen);
+		}
+		else if ((*it == L'?') && (insideQuote == L'\0')) {
+			if (paramCount < _params.size())
+			{
+				std::string s = _params[paramCount]->Get();
+				result.write(s.data(), s.length());
+				paramCount++;
+			} else {
+				throw DatabaseException("Error in AdhocStatement::ReplaceInsertions", 0, "----", "unexpected insertion points");
+			}
+		} else {
+			bufflen = wctomb(buff, *it);
+			result.write(buff, bufflen);
+		}
+	}		
+	return result.str();
+}
+
 void AdhocStatement::Execute() {
 	if (RemainingParameters() != 0) {
 		throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "There are stil some unsatisfied parameters");
 	}
 
-	if (mysql_real_query(_dbcopy, _sqlStatement.data(), _sqlStatement.length()) != 0) {
+	std::string sql = ReplaceInsertions();
+	if (mysql_real_query(_dbcopy, sql.data(), sql.length()) != 0) {
 		throw DatabaseException(_dbcopy, "Error in AdhocStatement::Prepare");
 	}
 
@@ -121,6 +157,27 @@ void AdhocStatement::Execute() {
 			throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "couldn't retrieve fields from query");
 		}
 	}
+}
+
+void AdhocStatement::ResetParameters() {
+	while (! _params.empty()) {
+		AdhocParameter *buf = _params.back();
+		_params.pop_back();
+		delete buf;
+	}	
+}
+
+void AdhocStatement::AssignNextParameter(AdhocParameter *buffer) {
+	if (buffer == NULL) { 
+		throw DatabaseException("Error in AdhocStatement::AssignNextParameter", 0, "----", "Buffer cannot be null");
+	}
+
+	if (RemainingParameters() == 0) {
+		delete buffer;
+		throw DatabaseException("Error in AdhocStatement::AssignNextParameter", 0, "----", "Have already assigned all possible input parameters");
+	}
+
+	_params.push_back(buffer);
 }
 
 bool AdhocStatement::FetchNextRow() {

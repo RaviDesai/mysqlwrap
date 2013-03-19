@@ -13,7 +13,7 @@ PROGRAM_SOURCE := program.cpp bug.cpp
 TEST_PROGRAM_SOURCE := test.cpp
 TEST_EMBEDDED_SOURCE := testemb.cpp
 LIBRARY_NAME := dbwrap
-LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp
+LIBRARY_SOURCES := DatabaseException.cpp Database.cpp Statement.cpp ParamBuffer.cpp Binary.cpp AdhocStatement.cpp AdhocParameter.cpp
 TEST_LIBRARY_SOURCES := UTFail.cpp TestNullable.cpp TestBinary.cpp TestDatabaseException.cpp TestDatabase.cpp TestImport.cpp
 LIBRARY_TYPE := dynamic
 DELIVERY_FOLDER := bin
@@ -167,7 +167,7 @@ run: deliver
 		echo "-----------------------------\n"; \
 	done
 
-runtest: $(TEST_PROGRAM_BINARY) $(TEST_EMBEDDED_BINARY)
+runtest: all $(TEST_PROGRAM_BINARY) $(TEST_EMBEDDED_BINARY)
 	@mkdir -p cover
 	@for progs in $(TEST_PROGRAM_BINARY); do \
 		$$progs ; \

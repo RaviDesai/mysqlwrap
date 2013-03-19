@@ -98,30 +98,47 @@ void TestDatabase::Test2AdHoc2() {
 		UTASSERT(db.IsConnected());	
 
 		string sql = "SELECT * FROM COUNTRY WHERE COUNTRY = '\xC2\xA1\xC2\xBFHasta ma\xC3\xB1\x61na!?'";
+		{
+			AdhocStatement stmt(db, sql);
+			UTASSERT(stmt.RemainingParameters() == 0);
+			stmt.Execute();
 
-		AdhocStatement stmt(db, sql);
-		UTASSERT(stmt.RemainingParameters() == 0);
-		stmt.Execute();
-
-		UTASSERT(! stmt.FetchNextRow());
-
-		sql = "SELECT * FROM COUNTRY WHERE COUNTRY = ?";
-		AdhocStatement stmt2(db, sql);
-		UTASSERT(stmt2.RemainingParameters() == 1);
-
-		bool stmt2WasCaught = false;
-		try {
-			stmt2.Execute();
-		} catch (const DatabaseException &de) {
-			stmt2WasCaught = true;	
-			char stmt2line[512];
-			std::stringstream ss;
-			ss << de << endl;
-			ss.getline(stmt2line, 512);
-			UTASSERT(strcmp(stmt2line, "Error in AdhocStatement::Execute ERROR 0(----) There are stil some unsatisfied parameters") == 0);
+			UTASSERT(! stmt.FetchNextRow());
 		}
 
-		UTASSERT(stmt2WasCaught == true);
+		sql = "SELECT * FROM COUNTRY WHERE COUNTRY = ?";
+		{
+			AdhocStatement stmt2(db, sql);
+			UTASSERT(stmt2.RemainingParameters() == 1);
+	
+			bool stmt2WasCaught = false;
+			try {
+				stmt2.Execute();
+			} catch (const DatabaseException &de) {
+				stmt2WasCaught = true;	
+				char stmt2line[512];
+				std::stringstream ss;
+				ss << de << endl;
+				ss.getline(stmt2line, 512);
+				UTASSERT(strcmp(stmt2line, "Error in AdhocStatement::Execute ERROR 0(----) There are stil some unsatisfied parameters") == 0);
+			}
+			UTASSERT(stmt2WasCaught == true);
+
+			stmt2.AssignNextParameter(Nullable<string>("Canada"));
+			stmt2.Execute();
+			UTASSERT(stmt2.NumberOfReturnedRows() == 1);
+			UTASSERT(stmt2.FetchNextRow());
+
+			Nullable<unsigned short int> countryId = stmt2.GetUShortDataInRow(0);
+			Nullable<std::string> countryName = stmt2.GetStringDataInRow(1);
+			Nullable<MYSQL_TIME> lastUpdate = stmt2.GetTimeDataInRow(2);
+
+			UTASSERT(*countryId == 20);
+			UTASSERT(strcmp(countryName->c_str(), "Canada") == 0);
+			UTASSERT(lastUpdate->year == 2006);
+			UTASSERT(lastUpdate->month == 2);
+			UTASSERT(lastUpdate->day == 15);
+		}
 
 	} catch (const DatabaseException &de) {
 		cout << de << endl;
