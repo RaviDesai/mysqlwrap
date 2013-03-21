@@ -202,6 +202,9 @@ void TestDatabase::Test2() {
 	} catch (const UTFail &fail) {
 		cout << fail << endl;
 		wasCaught = true;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
 	} catch (...) { 
 		cout << "random exception caught" << endl;
 		wasCaught = true;

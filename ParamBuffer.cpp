@@ -197,10 +197,13 @@ ParamBuffer::ParamBuffer(const Julian &julian) {
 	_bufferLength = _bufferSize;
 	_type = MYSQL_TYPE_DATETIME;
 	_isNull = 0;
+	memset(_buffer, 0, sizeof(MYSQL_TIME));
 
-	GregorianBreakdown gb = julian.to_gregorian(0);
-	MYSQL_TIME tm = gb.to_mysql_time();
-	*((MYSQL_TIME *)_buffer) = tm;
+	if (julian.Value() > 0) {
+		GregorianBreakdown gb = julian.to_gregorian(0);
+		MYSQL_TIME tm = gb.to_mysql_time();
+		*((MYSQL_TIME *)_buffer) = tm;
+	}
 }
 
 ParamBuffer::ParamBuffer(const Binary &data) {

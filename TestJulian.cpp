@@ -66,9 +66,10 @@ void TestJulian::Test2() {
 
 	Julian sixHours(6,0,0,0);
 	GregorianBreakdown gb = sixHours.to_gregorian(0);
-	cout << gb << endl;
+	UTASSERT(gb.time_type == TimeType::Time);
+	UTASSERT((gb.year == 0) && (gb.month == 0) && (gb.day == 0));
 	UTASSERT(gb.hour == 6);
-
+	UTASSERT((gb.minute == 0) && (gb.second == 0) && (gb.millisecond == 0));
 }
 
 void TestJulian::Test3() {

@@ -5,9 +5,18 @@
 #include <mysql_time.h>
 
 namespace MySQLWrap {
+	class JulianException : std::exception {
+	public:
+		JulianException(const std::string &msg) : _message(msg) {}
+		virtual ~JulianException() throw() {}
+		virtual const char *what() const throw() { return _message.c_str(); }
+	private:
+		std::string _message;
+	};
+
 	enum class TimeType { Date, Time, DateTime };
 	struct GregorianBreakdown {
-		unsigned int year; unsigned int month; unsigned int day;
+		int year; unsigned int month; unsigned int day;
 		unsigned int hour; unsigned int minute; unsigned int second; unsigned int millisecond;
 		int minutes_west_utc;
 		TimeType time_type;
@@ -22,8 +31,8 @@ namespace MySQLWrap {
 	class Julian {
 	public:
 		Julian();
-		Julian(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
-		Julian(unsigned int year, unsigned int month, unsigned int day);
+		Julian(int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
+		Julian(int year, unsigned int month, unsigned int day);
 		Julian(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 		Julian(const GregorianBreakdown &gb);
 		Julian(const Julian &) = default;
@@ -34,10 +43,10 @@ namespace MySQLWrap {
 		GregorianBreakdown to_gregorian(int minutes_west_utc) const;
 	
 	protected:
-		static double calculate_utc(unsigned int year, unsigned int month, unsigned int day, 
+		static double calculate_utc(int year, unsigned int month, unsigned int day, 
 					    unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 
-		static double calculate_jdn(unsigned int year, unsigned int month, unsigned int day);
+		static double calculate_jdn(int year, unsigned int month, unsigned int day);
 		static double calculate_time(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 	private:
 		double _julian;

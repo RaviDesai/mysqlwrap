@@ -12,7 +12,10 @@ GregorianBreakdown::GregorianBreakdown() {
 }
 
 GregorianBreakdown::GregorianBreakdown(const MYSQL_TIME &time, int minutes_west) {
-	year = time.year;
+	year = (int) time.year;
+	if (year < 0) { 
+		throw JulianException("Error converting from MYSQL_TIME - year is out of range");
+	}
 	month = time.month;
 	day = time.day;
 	hour = time.hour;
@@ -31,9 +34,14 @@ GregorianBreakdown::GregorianBreakdown(const MYSQL_TIME &time, int minutes_west)
 }
 
 MYSQL_TIME GregorianBreakdown::to_mysql_time() const {
+	if (year < 0) {
+		cout << year << "-" << month << "-" << day << " " << hour << ":" << minute << ":" << second << "." << millisecond << endl;
+		throw JulianException("Cannot convert to MYSQL_TIME, since year is BCE");
+	}
+
 	MYSQL_TIME result;
 
-	result.year = year;
+	result.year = (unsigned int) year;
 	result.month = month;
 	result.day = day;
 	result.hour = hour;
@@ -76,16 +84,25 @@ Julian::Julian() {
 Julian::Julian(const GregorianBreakdown &gb) {
 	_julian = calculate_utc(gb.year, gb.month, gb.day, gb.hour, gb.minute, gb.second, gb.millisecond);
 	_julian += ((double) gb.minutes_west_utc) / 1440;
+	if (_julian < 0) { 
+		throw JulianException("Date would result in an invalid (negative) Julian date.");
+	}
 	_time_type = gb.time_type;
 }
 
-Julian::Julian(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
+Julian::Julian(int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
 	_julian = calculate_utc(year, month, day, hour, minute, second, ms);
+	if (_julian < 0) { 
+		throw JulianException("Date would result in an invalid (negative) Julian date.");
+	}
 	_time_type = TimeType::DateTime;
 }
 
-Julian::Julian(unsigned int year, unsigned int month, unsigned int day) {
+Julian::Julian(int year, unsigned int month, unsigned int day) {
 	_julian = calculate_utc(year, month, day, 0, 0, 0, 0);
+	if (_julian < 0) { 
+		throw JulianException("Date would result in an invalid (negative) Julian date.");
+	}
 	_time_type = TimeType::Date;
 }
 
@@ -102,11 +119,11 @@ double Julian::Value() const {
 	return _julian;
 }
 
-double Julian::calculate_utc(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
+double Julian::calculate_utc(int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
 	return calculate_jdn(year, month, day) + calculate_time(hour, minute, second, ms);
 }
 
-double Julian::calculate_jdn(unsigned int year, unsigned int month, unsigned int day) {
+double Julian::calculate_jdn(int year, unsigned int month, unsigned int day) {
 	int a = (14 - month) / 12;
 	int y = year + 4800 - a;
 	int m = month + (12 * a) - 3;
