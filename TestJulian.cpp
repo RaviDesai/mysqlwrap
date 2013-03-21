@@ -64,6 +64,11 @@ void TestJulian::Test1() {
 void TestJulian::Test2() {
 	cout << __PRETTY_FUNCTION__ << endl;
 
+	Julian sixHours(6,0,0,0);
+	GregorianBreakdown gb = sixHours.to_gregorian(0);
+	cout << gb << endl;
+	UTASSERT(gb.hour == 6);
+
 }
 
 void TestJulian::Test3() {

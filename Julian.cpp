@@ -53,15 +53,19 @@ MYSQL_TIME GregorianBreakdown::to_mysql_time() const {
 }
 
 std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
-	out << setfill('0') << setw(4) << gb.year << "-"  << setw(2) << gb.month << "-" << setw(2) << gb.day << " "
-	    << setw(2) << gb.hour << ":" << setw(2) << gb.minute << ":" << setw(2) << gb.second;
+	if (gb.time_type != TimeType::Time) {
+		out << setfill('0') << setw(4) << gb.year << "-"  << setw(2) << gb.month << "-" << setw(2) << gb.day << " ";
+	}
 
+	out << setfill('0') << setw(2) << gb.hour << ":" << setw(2) << gb.minute << ":" << setw(2) << gb.second;
 	if (gb.millisecond > 0) {
 		out << "." << setw(3) << gb.millisecond;
 	}
 
-	char plusOrMinus = (gb.minutes_west_utc > 0) ? '-' : '+';
-	out << " UTC " << plusOrMinus << setprecision(2) << ((float) abs(gb.minutes_west_utc) / 60);
+	if (gb.time_type != TimeType::Time) { 
+		char plusOrMinus = (gb.minutes_west_utc > 0) ? '-' : '+';
+		out << " UTC " << plusOrMinus << setprecision(2) << ((float) abs(gb.minutes_west_utc) / 60);
+	}
 	return out;
 }
 
@@ -86,7 +90,7 @@ Julian::Julian(unsigned int year, unsigned int month, unsigned int day) {
 }
 
 Julian::Julian(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
-	_julian = calculate_utc(1, 1, 1, hour, minute, second, ms);
+	_julian = calculate_time(hour, minute, second, ms);
 	_time_type = TimeType::Time;
 }
 
@@ -98,7 +102,11 @@ double Julian::Value() const {
 	return _julian;
 }
 
-double Julian::calculate_utc(int year, int month, int day, int hour, int minute, int second, int ms) {
+double Julian::calculate_utc(unsigned int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
+	return calculate_jdn(year, month, day) + calculate_time(hour, minute, second, ms);
+}
+
+double Julian::calculate_jdn(unsigned int year, unsigned int month, unsigned int day) {
 	int a = (14 - month) / 12;
 	int y = year + 4800 - a;
 	int m = month + (12 * a) - 3;
@@ -106,8 +114,12 @@ double Julian::calculate_utc(int year, int month, int day, int hour, int minute,
 	int jdn = day + (int)(((153 * m) + 2) / 5) + (365*y) +
 		 (int)(y/4) - (int)(y / 100) + (int)(y/400) - 32045;
 
-	double result = (double)jdn + (((double)hour - 12)  / 24) + ((double)minute / 1440) +
-			((double)second / 86400) + ((double)ms / 86400000);
+	return ((double) jdn) - 0.5;
+}
+
+double Julian::calculate_time(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
+	double result = (((double) hour)  / 24) + (((double) minute) / 1440) +
+			(((double) second) / 86400) + (((double) ms) / 86400000);
 	return result;
 }
 
@@ -127,33 +139,60 @@ const int C = -38;
 GregorianBreakdown Julian::to_gregorian(int minutes_west_utc) const {
 	GregorianBreakdown result;
 
-	double adjJulian = _julian - (((double) minutes_west_utc) / 1440);
-	int J = (int) (adjJulian + 0.5);
-	int f = J + j;
-	f = f + ((int) ((((int) (4 * J + B) / 146097) * 3) / 4)) + C;
-	int e = r * f + v;
-	int g = (int) ((e % p) / r);
-	int h = u * g + w;
-	result.day = ((int)((h % s) / u)) + 1;
-	result.month = ((((int) h / s) + m) % n) + 1;
-	result.year = ((int) e/p) - y + ((int)((n + m - result.month) / n));
+	double time;
+	if (_time_type != TimeType::Time) {
+		double adjJulian = _julian - (((double) minutes_west_utc) / 1440);
+		int J = (int) (adjJulian + 0.5);
+		int f = J + j;
+		f = f + ((int) ((((int) (4 * J + B) / 146097) * 3) / 4)) + C;
+		int e = r * f + v;
+		int g = (int) ((e % p) / r);
+		int h = u * g + w;
+		result.day = ((int)((h % s) / u)) + 1;
+		result.month = ((((int) h / s) + m) % n) + 1;
+		result.year = ((int) e/p) - y + ((int)((n + m - result.month) / n));
 
-	double time = adjJulian + .5;
+		time = adjJulian + .5;
+	} else {
+		time = _julian - (((double) minutes_west_utc) / 1440);
+	}
+
 	time -= (int)time;
+	double subms = (0.5 / 86400000);
+
 	time = time * 24;
-	result.hour = (int) (time);
-	time -= (int)time;
+	subms = subms * 24;
+	result.hour = (int) (time + subms);
+	if (((int) time) != ((int) (time + subms))) {
+		time -= (int)(time + subms);
+		subms = 0;
+	} else {
+		time -= (int)(time + subms);
+	}
 
 	time = time * 60;
-	result.minute = (int) (time);
-	time -= (int)time;
+	subms = subms * 60;
+	result.minute = (int) (time + subms);
+	if (((int) time) != ((int) (time + subms))) {
+		time -= (int)(time + subms);
+		subms = 0;
+	} else {
+		time -= (int)(time + subms);
+	}
 
 	time = time * 60;
-	result.second = (int) (time);
-	time -= (int)time;
+	subms = subms * 60;
+	result.second = (int) (time + subms);
+	if (((int) time) != ((int) (time + subms))) {
+		time -= (int)(time + subms);
+		subms = 0;
+	} else {
+		time -= (int)(time + subms);
+	}
 
 	time = time * 1000;
-	result.millisecond = (int) (time);
+	subms = subms * 1000;
+	result.millisecond = (int) (time + subms);
 
 	result.minutes_west_utc = minutes_west_utc;
 	result.time_type = _time_type;

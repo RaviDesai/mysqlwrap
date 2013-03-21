@@ -34,9 +34,11 @@ namespace MySQLWrap {
 		GregorianBreakdown to_gregorian(int minutes_west_utc) const;
 	
 	protected:
-		static double calculate_utc(int year, int month, int day, 
-					    int hour, int minute, int second, int ms);
+		static double calculate_utc(unsigned int year, unsigned int month, unsigned int day, 
+					    unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 
+		static double calculate_jdn(unsigned int year, unsigned int month, unsigned int day);
+		static double calculate_time(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 	private:
 		double _julian;
 		TimeType _time_type;
