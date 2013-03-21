@@ -32,17 +32,13 @@ namespace MySQLWrap {
 		Statement(const Statement &);
 		virtual ~Statement();
 
-		void AssignNextParameter(const Nullable<std::string> &param);
-		void AssignNextParameter(const Nullable<char> &param);
-		void AssignNextParameter(const Nullable<unsigned char> &param);
-		void AssignNextParameter(const Nullable<short int> &param);
-		void AssignNextParameter(const Nullable<unsigned short int> &param);
-		void AssignNextParameter(const Nullable<unsigned int> &param);
-		void AssignNextParameter(const Nullable<int> &param);
-		void AssignNextParameter(const Nullable<MYSQL_TIME> &param);
-		void AssignNextParameter(const Nullable<Binary> &data);
-		void AssignNextParameter(const Nullable<float> &data);
-		void AssignNextParameter(const Nullable<double> &data);
+		template<class X> void AssignNextParameter(const Nullable<X> &param) {
+			if (! param.HasValue()) {
+				AssignNextParameter(new ParamBuffer(typeid(X)));
+			} else {
+				AssignNextParameter(new ParamBuffer(*param));
+			}
+		};
 
 		unsigned long ParameterCount();
 		void ResetParameters();
@@ -59,7 +55,7 @@ namespace MySQLWrap {
 		Nullable<unsigned short int> GetUShortDataInRow(unsigned int column);
 		Nullable<int> GetLongDataInRow(unsigned int column);
 		Nullable<unsigned int> GetULongDataInRow(unsigned int column);
-		Nullable<MYSQL_TIME> GetTimeDataInRow(unsigned int column);
+		Nullable<Julian> GetTimeDataInRow(unsigned int column);
 		Nullable<std::string> GetStringDataInRow(unsigned int column);
 		Nullable<Binary> GetBinaryDataInRow(unsigned int column);
 		Nullable<float> GetFloatDataInRow(unsigned int column);
@@ -78,7 +74,7 @@ namespace MySQLWrap {
 		void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
 		void GetDataInRow(unsigned int column, Nullable<int> &data);
 		void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
-		void GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &data);
+		void GetDataInRow(unsigned int column, Nullable<Julian> &data);
 		void GetDataInRow(unsigned int column, Nullable<Binary> &data);
 		void GetDataInRow(unsigned int column, Nullable<float> &data);
 		void GetDataInRow(unsigned int column, Nullable<double> &data);

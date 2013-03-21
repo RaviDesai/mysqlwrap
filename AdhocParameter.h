@@ -2,7 +2,10 @@
 
 #include <string>
 #include <sstream>
+
 #include "Binary.h"
+#include "Julian.h"
+
 #include <mysql.h>
 #include <mysql_time.h>
 
@@ -18,7 +21,7 @@ namespace MySQLWrap {
 		void SetData(const unsigned long data);
 		void SetData(const long data);
 		void SetData(const std::string &data);
-		void SetData(const MYSQL_TIME &data);
+		void SetData(const Julian &data);
 		void SetData(const Binary &data);
 		void SetData(const float data);
 		void SetData(const double data);

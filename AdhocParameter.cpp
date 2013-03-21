@@ -56,17 +56,20 @@ void AdhocParameter::SetData(const double data) {
 	_data << data;
 }
 
-void AdhocParameter::SetData(const MYSQL_TIME &data) {
-	if (data.time_type == MYSQL_TIMESTAMP_DATETIME) {
+void AdhocParameter::SetData(const Julian &julian) {
+	GregorianBreakdown data = julian.to_gregorian(0);
+	
+	if (julian.Type() == TimeType::DateTime) {
 		_data << setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day << " "
 		      << setw(2) << data.hour << ":" << setw(2) << data.minute << ":" << setw(2) << data.second << "."
-		      << setw(6) << data.second_part;
-	} else if (data.time_type == MYSQL_TIMESTAMP_DATE) {
+		      << setw(6) << data.millisecond * 1000;
+	} else if (julian.Type() == TimeType::Date) {
 		_data << setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day;
-	} else if (data.time_type == MYSQL_TIMESTAMP_TIME) {
+	} else if (julian.Type() == TimeType::Time) {
 		unsigned long hours = data.day * 24 + data.hour;
 		_data << setfill('0') 
-		      << setw(2) << hours << ":" << setw(2) << data.minute << ":" << setw(2) << data.second;
+		      << setw(2) << hours << ":" << setw(2) << data.minute << ":" << setw(2) << data.second << "." 
+		      << setw(6) << data.millisecond * 1000;
 	}
 }
 

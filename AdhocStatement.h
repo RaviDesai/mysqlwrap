@@ -7,6 +7,7 @@
 #include "ParamBuffer.h"
 #include "Nullable.h"
 #include "AdhocParameter.h"
+#include "Julian.h"
 
 #include <mysql.h>
 #include <mysql_time.h>
@@ -34,7 +35,7 @@ namespace MySQLWrap {
 		Nullable<unsigned short int> GetUShortDataInRow(unsigned int column);
 		Nullable<int> GetLongDataInRow(unsigned int column);
 		Nullable<unsigned int> GetULongDataInRow(unsigned int column);
-		Nullable<MYSQL_TIME> GetTimeDataInRow(unsigned int column);
+		Nullable<Julian> GetTimeDataInRow(unsigned int column);
 		Nullable<std::string> GetStringDataInRow(unsigned int column);
 		Nullable<Binary> GetBinaryDataInRow(unsigned int column);
 		Nullable<float> GetFloatDataInRow(unsigned int column);
@@ -60,7 +61,7 @@ namespace MySQLWrap {
 		void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
 		void GetDataInRow(unsigned int column, Nullable<int> &data);
 		void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
-		void GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &data);
+		void GetDataInRow(unsigned int column, Nullable<Julian> &data);
 		void GetDataInRow(unsigned int column, Nullable<Binary> &data);
 		void GetDataInRow(unsigned int column, Nullable<float> &data);
 		void GetDataInRow(unsigned int column, Nullable<double> &data);

@@ -1,20 +1,24 @@
 #pragma once
 
 #include <string>
+#include <typeinfo>
 #include "mysql.h"
 #include "Binary.h"
+#include "Julian.h"
 
 namespace MySQLWrap {
 
 	class ParamBuffer {
 	public:
 		ParamBuffer(const enum_field_types type, my_bool isUnsigned);
+		ParamBuffer(const std::type_info &info);
 		ParamBuffer(const std::string &str, size_t maxSize);
+		ParamBuffer(const std::string &str);
 		ParamBuffer(const short int i);
 		ParamBuffer(const unsigned short int i);
 		ParamBuffer(const int i);
 		ParamBuffer(const unsigned int i);
-		ParamBuffer(const MYSQL_TIME &t);
+		ParamBuffer(const Julian &t);
 		ParamBuffer(const Binary &data);
 		ParamBuffer(const char ch);
 		ParamBuffer(const unsigned char ch);

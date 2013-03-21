@@ -7,6 +7,7 @@
 #include "TestDatabaseException.h"
 #include "TestDatabase.h"
 #include "TestImport.h"
+#include "TestJulian.h"
 
 using namespace std;
 using namespace MySQLWrap;
@@ -35,6 +36,9 @@ int main(int argc, char** argv)
 
 	TestDatabase ts4;
 	failures += ts4.RunTests(embedded);
+
+	TestJulian ts5;
+	failures += ts5.RunTests();
 
 	cout << "End Test Suite" << endl;
 

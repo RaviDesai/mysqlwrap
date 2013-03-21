@@ -15,6 +15,44 @@ ParamBuffer::ParamBuffer(enum_field_types type, my_bool isUnsigned) {
 	_isUnsigned = isUnsigned;
 }
 
+ParamBuffer::ParamBuffer(const std::type_info &info) {
+	my_bool isUnsigned = false;
+
+	if (info == typeid(std::string)) {
+		_type = MYSQL_TYPE_STRING;
+	} else if (info == typeid(Binary)) {
+		_type = MYSQL_TYPE_BLOB;
+	} else if (info == typeid(double)) {
+		_type = MYSQL_TYPE_DOUBLE;
+	} else if (info == typeid(float)) {
+		_type = MYSQL_TYPE_FLOAT;
+	} else if (info == typeid(char)) {
+		_type = MYSQL_TYPE_TINY;
+	} else if (info == typeid(unsigned char)) {
+		_type = MYSQL_TYPE_TINY;
+		isUnsigned = true;
+	} else if (info == typeid(short)) {
+		_type = MYSQL_TYPE_SHORT;
+	} else if (info == typeid(unsigned short)) {
+		_type = MYSQL_TYPE_SHORT;
+		isUnsigned = true;
+	} else if (info == typeid(int)) {
+		_type = MYSQL_TYPE_LONG;
+	} else if (info == typeid (unsigned int)) {
+		_type = MYSQL_TYPE_LONG;
+		isUnsigned = true;
+	}
+
+	_buffer = NULL;
+	_bufferSize = 0;
+	_bufferLength = 0;
+	_isNull = 1;
+	_isUnsigned = isUnsigned;
+}
+
+ParamBuffer::ParamBuffer(const std::string &str) : ParamBuffer(str, str.length()) {
+}
+
 ParamBuffer::ParamBuffer(const std::string &str, size_t maxSize) {
 	if (str.size() > maxSize) {
 		throw DatabaseException("Error in ParamBuffer::ParamBuffer(string)", 0, "----", "length of str parameter is greater than maxSize");
@@ -153,13 +191,15 @@ ParamBuffer::ParamBuffer(const unsigned int i) {
 	*((unsigned long *)_buffer) = i;
 }
 
-ParamBuffer::ParamBuffer(const MYSQL_TIME &tm) {
+ParamBuffer::ParamBuffer(const Julian &julian) {
 	_buffer = malloc(sizeof(MYSQL_TIME));
 	_bufferSize = sizeof(MYSQL_TIME);
 	_bufferLength = _bufferSize;
 	_type = MYSQL_TYPE_DATETIME;
 	_isNull = 0;
 
+	GregorianBreakdown gb = julian.to_gregorian(0);
+	MYSQL_TIME tm = gb.to_mysql_time();
 	*((MYSQL_TIME *)_buffer) = tm;
 }
 

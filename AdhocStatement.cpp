@@ -388,8 +388,8 @@ Nullable<Binary> AdhocStatement::GetBinaryDataInRow(unsigned int column) {
 	return result;
 }
 
-Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
-	Nullable<MYSQL_TIME> result;
+Nullable<Julian> AdhocStatement::GetTimeDataInRow(unsigned int column) {
+	Nullable<Julian> result;
 	Nullable<string> val = GetStringDataInRowInternal(column);
 	if (val.HasValue()) {
 		if ((_fields[column].type != MYSQL_TYPE_TIMESTAMP) &&
@@ -398,6 +398,7 @@ Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
 		    (_fields[column].type != MYSQL_TYPE_DATETIME)) {
 			throw DatabaseException("Error in AdhocStatement::GetTimeDataInRow", 0, "----", "value is not a date or time type");
 		}
+
 		MYSQL_TIME timeval;
 		timeval.year = 0;
 		timeval.month = 0;
@@ -427,7 +428,9 @@ Nullable<MYSQL_TIME> AdhocStatement::GetTimeDataInRow(unsigned int column) {
 				throw DatabaseException("Error in AdhocStatement::GetUShortDataInRow", 0, "----", "sscanf failed to produce a valid time value");
 			}
 		}
-		result = timeval;
+
+		GregorianBreakdown gb(timeval, 0);
+		result = Julian(gb);
 	}
 	return result;
 }
@@ -460,7 +463,7 @@ void AdhocStatement::GetDataInRow(unsigned int column, Nullable<unsigned int> &r
 	result = GetULongDataInRow(column);
 }
 
-void AdhocStatement::GetDataInRow(unsigned int column, Nullable<MYSQL_TIME> &result) {
+void AdhocStatement::GetDataInRow(unsigned int column, Nullable<Julian> &result) {
 	result = GetTimeDataInRow(column);
 }
 

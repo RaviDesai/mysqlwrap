@@ -55,12 +55,13 @@ void TestDatabase::Test2AdHoc() {
 			testId++;
 			Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
 			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
-			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+			Nullable<Julian> lastUpdate = stmt.GetTimeDataInRow(2);
 
 			UTASSERT(testId == (*countryId));	
-			UTASSERT(lastUpdate->year == 2006);
-			UTASSERT(lastUpdate->month == 2);
-			UTASSERT(lastUpdate->day == 15);
+			GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+			UTASSERT(gb.year == 2006);
+			UTASSERT(gb.month == 2);
+			UTASSERT(gb.day == 15);
 
 			if (testId > 1) {
 				UTASSERT(countryName.deref() > lastCountry);
@@ -131,13 +132,14 @@ void TestDatabase::Test2AdHoc2() {
 
 			Nullable<unsigned short int> countryId = stmt2.GetUShortDataInRow(0);
 			Nullable<std::string> countryName = stmt2.GetStringDataInRow(1);
-			Nullable<MYSQL_TIME> lastUpdate = stmt2.GetTimeDataInRow(2);
+			Nullable<Julian> lastUpdate = stmt2.GetTimeDataInRow(2);
 
 			UTASSERT(*countryId == 20);
 			UTASSERT(strcmp(countryName->c_str(), "Canada") == 0);
-			UTASSERT(lastUpdate->year == 2006);
-			UTASSERT(lastUpdate->month == 2);
-			UTASSERT(lastUpdate->day == 15);
+			GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+			UTASSERT(gb.year == 2006);
+			UTASSERT(gb.month == 2);
+			UTASSERT(gb.day == 15);
 		}
 
 	} catch (const DatabaseException &de) {
@@ -177,12 +179,14 @@ void TestDatabase::Test2() {
 			testId++;
 			Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
 			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
-			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+			Nullable<Julian> lastUpdate = stmt.GetTimeDataInRow(2);
 
 			UTASSERT(testId == (*countryId));	
-			UTASSERT(lastUpdate->year == 2006);
-			UTASSERT(lastUpdate->month == 2);
-			UTASSERT(lastUpdate->day == 15);
+
+			GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+			UTASSERT(gb.year == 2006);
+			UTASSERT(gb.month == 2);
+			UTASSERT(gb.day == 15);
 			
 			if (testId > 1) {
 				UTASSERT(countryName.deref() > lastCountry);
@@ -226,14 +230,15 @@ void TestDatabase::Test3() {
 			testId++;
 			Nullable<unsigned short int> countryId;
 			Nullable<std::string> countryName;
-			Nullable<MYSQL_TIME> lastUpdate;
+			Nullable<Julian> lastUpdate;
 
 			stmt >> countryId >> countryName >> lastUpdate;
 
 			UTASSERT(testId == (*countryId));	
-			UTASSERT(lastUpdate->year == 2006);
-			UTASSERT(lastUpdate->month == 2);
-			UTASSERT(lastUpdate->day == 15);
+			GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+			UTASSERT(gb.year == 2006);
+			UTASSERT(gb.month == 2);
+			UTASSERT(gb.day == 15);
 			
 			if (testId > 1) {
 				UTASSERT(countryName.deref() > lastCountry);
@@ -310,15 +315,16 @@ void TestDatabase::Test5() {
 
 		Nullable<unsigned short int> countryId;
 		Nullable<std::string> countryName;
-		Nullable<MYSQL_TIME> lastUpdate;
+		Nullable<Julian> lastUpdate;
 
 		stmt >> countryId >> countryName >> lastUpdate;
 
 		UTASSERT(7 == (*countryId));	
 		UTASSERT(strcmp(countryName->c_str(), "Armenia") == 0);
-		UTASSERT(lastUpdate->year == 2006);
-		UTASSERT(lastUpdate->month == 2);
-		UTASSERT(lastUpdate->day == 15);
+		GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+		UTASSERT(gb.year == 2006);
+		UTASSERT(gb.month == 2);
+		UTASSERT(gb.day == 15);
 
 		stmt << reset << Nullable<short int>(8) << execute;
 		UTASSERT(stmt << fetch);
@@ -328,9 +334,10 @@ void TestDatabase::Test5() {
 
 		UTASSERT(8 == (*countryId));	
 		UTASSERT(strcmp(countryName->c_str(), "Australia") == 0);
-		UTASSERT(lastUpdate->year == 2006);
-		UTASSERT(lastUpdate->month == 2);
-		UTASSERT(lastUpdate->day == 15);
+		gb = lastUpdate->to_gregorian(0);
+		UTASSERT(gb.year == 2006);
+		UTASSERT(gb.month == 2);
+		UTASSERT(gb.day == 15);
 
 	} catch (const DatabaseException &de) {
 		cout << de << endl;
@@ -424,12 +431,13 @@ void TestDatabase::Test8() {
 			testId++;
 			Nullable<unsigned short int> countryId = stmt.GetUShortDataInRow(0);
 			Nullable<std::string> countryName = stmt.GetStringDataInRow(1);
-			Nullable<MYSQL_TIME> lastUpdate = stmt.GetTimeDataInRow(2);
+			Nullable<Julian> lastUpdate = stmt.GetTimeDataInRow(2);
 
 			UTASSERT(testId == (*countryId));	
-			UTASSERT(lastUpdate->year == 2006);
-			UTASSERT(lastUpdate->month == 2);
-			UTASSERT(lastUpdate->day == 15);
+			GregorianBreakdown gb = lastUpdate->to_gregorian(0);
+			UTASSERT(gb.year == 2006);
+			UTASSERT(gb.month == 2);
+			UTASSERT(gb.day == 15);
 			
 			if (testId > 1) {
 				UTASSERT(countryName.deref() > lastCountry);
