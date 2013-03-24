@@ -22,6 +22,10 @@ namespace MySQLWrap {
 		TimeType time_type;
 
 		GregorianBreakdown();
+		GregorianBreakdown(int year, unsigned int month, unsigned int day, 
+				   unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms, int minutes_west_utc);
+		GregorianBreakdown(int year, unsigned int month, unsigned int day);
+		GregorianBreakdown(unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 		GregorianBreakdown(const MYSQL_TIME &time, int minutes_west_utc);
 		MYSQL_TIME to_mysql_time() const;
 	};
@@ -31,9 +35,10 @@ namespace MySQLWrap {
 	class Julian {
 	public:
 		Julian();
+		Julian(double value, TimeType time_type);
 		Julian(int year, unsigned int month, unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 		Julian(int year, unsigned int month, unsigned int day);
-		Julian(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
+		Julian(unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms);
 		Julian(const GregorianBreakdown &gb);
 		Julian(const Julian &) = default;
 		Julian &operator=(const Julian &) = default;
@@ -53,4 +58,9 @@ namespace MySQLWrap {
 		TimeType _time_type;
 	};
 
+	bool operator<(const Julian &left, const Julian &right);
+	Julian operator+(const Julian &left, const Julian &right);
+	Julian operator+(const Julian &left, double right);
+	Julian operator-(const Julian &left, const Julian &right);
+	Julian operator-(const Julian &left, double right);
 }

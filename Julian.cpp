@@ -11,6 +11,37 @@ GregorianBreakdown::GregorianBreakdown() {
 	time_type = TimeType::DateTime;
 }
 
+GregorianBreakdown::GregorianBreakdown(int inyear, unsigned int inmonth, unsigned int inday, 
+				       unsigned int inhour, unsigned int inminute, unsigned int insecond, unsigned int inms, int inminutes_west) {
+	year = inyear;
+	month = inmonth;
+	day = inday;
+	hour = inhour;
+	minute = inminute;
+	second = insecond;
+	millisecond = inms;
+	time_type = TimeType::DateTime;
+	minutes_west_utc = inminutes_west;
+}
+
+GregorianBreakdown::GregorianBreakdown(int inyear, unsigned int inmonth, unsigned int inday) {
+	year = inyear;
+	month = inmonth;
+	day = inday;
+	time_type = TimeType::Date;
+	minutes_west_utc = 0;
+}
+
+GregorianBreakdown::GregorianBreakdown(unsigned int inday, unsigned int inhour, unsigned int inminute, unsigned int insecond, unsigned int inms) {
+	minutes_west_utc = 0;
+	day = inday;
+	hour = inhour;
+	minute = inminute;
+	second = insecond;
+	millisecond = inms;
+	time_type = TimeType::Time;
+}
+
 GregorianBreakdown::GregorianBreakdown(const MYSQL_TIME &time, int minutes_west) {
 	year = (int) time.year;
 	if (year < 0) { 
@@ -62,12 +93,24 @@ MYSQL_TIME GregorianBreakdown::to_mysql_time() const {
 
 std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
 	if (gb.time_type != TimeType::Time) {
-		out << setfill('0') << setw(4) << gb.year << "-"  << setw(2) << gb.month << "-" << setw(2) << gb.day << " ";
+		int year = gb.year;
+		string era = "";
+		if (year < 0) {
+			era = "BCE ";
+			year = -year;
+		}
+		out << setfill('0') << setw(4) << era << year << "-"  << setw(2) << gb.month << "-" << setw(2) << gb.day << " ";
 	}
 
-	out << setfill('0') << setw(2) << gb.hour << ":" << setw(2) << gb.minute << ":" << setw(2) << gb.second;
-	if (gb.millisecond > 0) {
-		out << "." << setw(3) << gb.millisecond;
+	if (gb.time_type != TimeType::Date) {
+		out << setfill('0');
+		if (gb.time_type == TimeType::Time && gb.day > 0) {
+			out << gb.day << " ";
+		}
+		out << setw(2) << gb.hour << ":" << setw(2) << gb.minute << ":" << setw(2) << gb.second;
+		if (gb.millisecond > 0) {
+			out << "." << setw(3) << gb.millisecond;
+		}
 	}
 
 	if (gb.time_type != TimeType::Time) { 
@@ -79,6 +122,15 @@ std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
 
 Julian::Julian() {
 	_julian = 0;
+	_time_type = TimeType::Time;
+}
+
+Julian::Julian(double invalue, TimeType intype) {
+	_julian = invalue;
+	_time_type = intype;
+	if (invalue < 0) {
+		throw JulianException("Date would result in an invalid (negative) Julian date.");
+	}
 }
 
 Julian::Julian(const GregorianBreakdown &gb) {
@@ -106,8 +158,8 @@ Julian::Julian(int year, unsigned int month, unsigned int day) {
 	_time_type = TimeType::Date;
 }
 
-Julian::Julian(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
-	_julian = calculate_time(hour, minute, second, ms);
+Julian::Julian(unsigned int day, unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
+	_julian = day + calculate_time(hour, minute, second, ms);
 	_time_type = TimeType::Time;
 }
 
@@ -172,6 +224,7 @@ GregorianBreakdown Julian::to_gregorian(int minutes_west_utc) const {
 		time = adjJulian + .5;
 	} else {
 		time = _julian - (((double) minutes_west_utc) / 1440);
+		result.day = (int) time;
 	}
 
 	time -= (int)time;
@@ -214,6 +267,62 @@ GregorianBreakdown Julian::to_gregorian(int minutes_west_utc) const {
 	result.minutes_west_utc = minutes_west_utc;
 	result.time_type = _time_type;
 	return result;
+}
+
+Julian operator+(const Julian &left, const Julian &right) {
+	TimeType time_type = TimeType::DateTime;
+
+	if (right.Type() != TimeType::Time) {
+		throw JulianException("In order to add - the right hand side value must be a Time");
+	}
+
+	if (left.Type() == TimeType::Time) {
+		time_type = TimeType::Time;
+	}
+	
+	return Julian(left.Value() + right.Value(), time_type);
+}
+
+Julian operator+(const Julian &left, double right) {
+	TimeType time_type = TimeType::DateTime;
+
+	if (left.Type() == TimeType::Time) {
+		time_type = TimeType::Time;
+	}
+	
+	return Julian(left.Value() + right, time_type);
+}
+
+Julian operator-(const Julian &left, const Julian &right) {
+	TimeType time_type = TimeType::DateTime;
+
+	if (right.Type() != TimeType::Time) {
+		throw JulianException("In order to subtract - the right hand side value must be a Time");
+	}
+
+	if (left.Type() == TimeType::Time) {
+		time_type = TimeType::Time;
+	}
+	
+	return Julian(left.Value() - right.Value(), time_type);
+}
+
+Julian operator-(const Julian &left, double right) {
+	TimeType time_type = TimeType::DateTime;
+
+	if (left.Type() == TimeType::Time) {
+		time_type = TimeType::Time;
+	}
+	
+	return Julian(left.Value() - right, time_type);
+}
+
+bool operator<(const Julian &left, const Julian &right) {
+	if (left.Type() != right.Type()) {
+		return left.Type() < right.Type();
+	}
+
+	return left.Value() < right.Value();
 }
 
 }
