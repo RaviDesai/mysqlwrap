@@ -1,5 +1,7 @@
 #include <iostream>
 #include <iomanip>
+#include <sstream>
+
 #include "UTFail.h"
 #include "TestJulian.h"
 #include "Julian.h"
@@ -162,6 +164,15 @@ void TestJulian::Test5() {
 
 void TestJulian::Test6() {
 	cout << __PRETTY_FUNCTION__ << endl;
+
+	Julian j(-43, 1, 15);
+	GregorianBreakdown bc = j.to_gregorian(0);
+
+	std::stringstream ss;
+	ss << bc << endl;
+	char line[512];
+	ss.getline(line, 512);
+	UTASSERT(strcmp(line, "BCE 43-01-15") == 0);	
 
 }
 

@@ -12,8 +12,7 @@ using namespace std;
 
 namespace MySQLWrap {
 
-AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) {
-	_dbcopy = db._db;
+AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) : _db(db) {
 	_currentColumn = 0;
 	_numberResultColumns = 0;
 	_numberAffectedRows = 0;
@@ -27,8 +26,7 @@ AdhocStatement::AdhocStatement(Database &db, const string &sqlStatement) {
 	Prepare();
 }
 
-AdhocStatement::AdhocStatement(const AdhocStatement &stmt) {
-	_dbcopy = stmt._dbcopy;
+AdhocStatement::AdhocStatement(const AdhocStatement &stmt) : _db(stmt._db) {
 	_sqlStatement = stmt._sqlStatement;
 	_currentColumn = 0;
 	_numberResultColumns = 0;
@@ -89,6 +87,9 @@ unsigned int AdhocStatement::RemainingParameters() {
 }
 
 void AdhocStatement::Prepare() {
+	if (! _db.IsConnected()) {
+		throw DatabaseException("AdhocStatement::Prepare", 0, "----", "Database is not connected");
+	}
 	_result = NULL;
 	ScanForInsertions();
 }
@@ -128,27 +129,31 @@ std::string AdhocStatement::ReplaceInsertions() {
 }
 
 void AdhocStatement::Execute() {
+	if (! _db.IsConnected()) {
+		throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "Database is not connected");
+	}
+
 	if (RemainingParameters() != 0) {
 		throw DatabaseException("Error in AdhocStatement::Execute", 0, "----", "There are stil some unsatisfied parameters");
 	}
 
 	std::string sql = ReplaceInsertions();
-	if (mysql_real_query(_dbcopy, sql.data(), sql.length()) != 0) {
-		throw DatabaseException(_dbcopy, "Error in AdhocStatement::Prepare");
+	if (mysql_real_query(_db._db, sql.data(), sql.length()) != 0) {
+		throw DatabaseException(_db._db, "Error in AdhocStatement::Prepare");
 	}
 
-	_numberResultColumns = mysql_field_count(_dbcopy);
-	_result = mysql_store_result(_dbcopy);
+	_numberResultColumns = mysql_field_count(_db._db);
+	_result = mysql_store_result(_db._db);
 	
 	if (_result == NULL && _numberResultColumns > 0) {
-		throw DatabaseException(_dbcopy, "Error in AdhocStatement::Execute");
+		throw DatabaseException(_db._db, "Error in AdhocStatement::Execute");
 	} 
 
 	_resultWasStored = true;
 
 	if (_numberResultColumns == 0) {
 		_eof = true;
-		_numberAffectedRows = mysql_affected_rows(_dbcopy);
+		_numberAffectedRows = mysql_affected_rows(_db._db);
 	} else {
 		_eof = false;
 		_numberResultRows = mysql_num_rows(_result);
@@ -483,6 +488,16 @@ unsigned int AdhocStatement::GetNextDataColumn() {
 	unsigned int result = _currentColumn;
 	_currentColumn++;
 	return result;
+}
+
+AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel &exec) {
+	stmt.Execute();
+	return stmt;
+}
+
+AdhocStatement &operator<<(AdhocStatement &stmt, const FetchSentinel &fetch) {
+	stmt.FetchNextRow();
+	return stmt;
 }
 
 }

@@ -8,9 +8,8 @@ using namespace std;
 
 namespace MySQLWrap {
 
-Statement::Statement(Database &db, const std::string &sqlStatement) {
+Statement::Statement(Database &db, const std::string &sqlStatement) : _db(db) {
 	_sqlStatement = sqlStatement;
-	_dbcopy = db._db;
 	_resultWasStored = false;
 	_eof = true;
 	_currentColumn = 0;
@@ -18,9 +17,8 @@ Statement::Statement(Database &db, const std::string &sqlStatement) {
 	Prepare();
 }
 
-Statement::Statement(const Statement &copy) {
+Statement::Statement(const Statement &copy) : _db(copy._db) {
 	_sqlStatement = copy._sqlStatement;
-	_dbcopy = copy._dbcopy;
 	_resultWasStored = false;
 	_eof = true;
 	_currentColumn = 0;
@@ -29,10 +27,14 @@ Statement::Statement(const Statement &copy) {
 }
 
 void Statement::Prepare() {
+	if (! _db.IsConnected()) {
+		throw DatabaseException("Error in Statement::Prepare", 0, "----", "Database is not connected");
+	}
+
 	_numberAffectedRows = 0;
 
-	if ((_stmt = mysql_stmt_init(_dbcopy)) == NULL) {
-		throw DatabaseException(_dbcopy, "Error in Statement::Prepare during initialize");
+	if ((_stmt = mysql_stmt_init(_db._db)) == NULL) {
+		throw DatabaseException(_db._db, "Error in Statement::Prepare during initialize");
 	}
 
 	if (mysql_stmt_prepare(_stmt, _sqlStatement.c_str(), _sqlStatement.length()) != 0) {
@@ -246,6 +248,10 @@ Nullable<unsigned int> Statement::GetULongDataInRow(unsigned int column) {
 }
 
 void Statement::Execute() {
+	if (! _db.IsConnected()) {
+		throw DatabaseException("Error in Statement::Execute", 0, "----", "Database is not connected");
+	}
+
 	_numberAffectedRows = 0;
 	_eof = true;
 	_currentColumn = 0;

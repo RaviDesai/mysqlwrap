@@ -81,8 +81,8 @@ namespace MySQLWrap {
 		my_ulonglong _numberAffectedRows;
 		my_ulonglong _numberResultRows;
 
+		Database &_db;
 		MYSQL_RES *_result;
-		MYSQL *_dbcopy;
 		MYSQL_ROW _currentRow;
 		MYSQL_FIELD *_fields;
 		unsigned long* _currentRowLengths;

@@ -99,7 +99,12 @@ std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
 			era = "BCE ";
 			year = -year;
 		}
-		out << setfill('0') << setw(4) << era << year << "-"  << setw(2) << gb.month << "-" << setw(2) << gb.day << " ";
+
+		out << setfill(' ') << era << year << "-" << setfill('0') << setw(2) << gb.month << "-" << setw(2) << gb.day;
+
+		if (gb.time_type != TimeType::Date) {
+			out << " ";
+		}
 	}
 
 	if (gb.time_type != TimeType::Date) {
@@ -113,10 +118,12 @@ std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
 		}
 	}
 
-	if (gb.time_type != TimeType::Time) { 
+	if (gb.time_type != TimeType::Date) { 
 		char plusOrMinus = (gb.minutes_west_utc > 0) ? '-' : '+';
 		out << " UTC " << plusOrMinus << setprecision(2) << ((float) abs(gb.minutes_west_utc) / 60);
 	}
+
+	out << setfill(' ');
 	return out;
 }
 
@@ -323,6 +330,12 @@ bool operator<(const Julian &left, const Julian &right) {
 	}
 
 	return left.Value() < right.Value();
+}
+
+std::ostream &operator<<(std::ostream &out, const Julian &julian) {
+	GregorianBreakdown bd = julian.to_gregorian(0);
+	out << bd;
+	return out;
 }
 
 }

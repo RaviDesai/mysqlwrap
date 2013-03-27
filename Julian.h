@@ -58,6 +58,7 @@ namespace MySQLWrap {
 		TimeType _time_type;
 	};
 
+	std::ostream &operator<<(std::ostream &out, const Julian &julian);
 	bool operator<(const Julian &left, const Julian &right);
 	Julian operator+(const Julian &left, const Julian &right);
 	Julian operator+(const Julian &left, double right);

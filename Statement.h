@@ -92,8 +92,8 @@ namespace MySQLWrap {
 		bool _hasBlobField;
 		my_ulonglong _numberAffectedRows;
 
+		Database &_db;
 		MYSQL_STMT *_stmt;
-		MYSQL *_dbcopy;
 		MYSQL_BIND *_bind;
 		MYSQL_BIND *_resultBind;
 

@@ -5,6 +5,7 @@
 using namespace std;
 
 #define UTASSERT(EXP) if (!(EXP)) throw UTFail(__PRETTY_FUNCTION__, __LINE__, #EXP);
+#define UTEQUALS(LHS, RHS) if (!((LHS) == (RHS))) { cerr << "Failure: " << (LHS) << " == " << (RHS) << endl; throw UTFail(__PRETTY_FUNCTION__, __LINE__, #LHS + std::string(" != ") + #RHS); }
 
 class UTFail {
 public:

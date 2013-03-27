@@ -75,8 +75,7 @@ void TestDatabase::Test2AdHoc() {
 		cout << de << endl;
 		wasCaught = true;
 	} catch (const UTFail &fail) {
-		cout << fail << endl;
-		wasCaught = true;
+		throw;
 	} catch (const std::exception &exp) {
 		cout << exp.what() << endl;
 		wasCaught = true;
@@ -146,8 +145,7 @@ void TestDatabase::Test2AdHoc2() {
 		cout << de << endl;
 		wasCaught = true;
 	} catch (const UTFail &fail) {
-		cout << fail << endl;
-		wasCaught = true;
+		throw;
 	} catch (const std::exception &exp) {
 		cout << exp.what() << endl;
 		wasCaught = true;
@@ -200,8 +198,7 @@ void TestDatabase::Test2() {
 		cout << de << endl;
 		wasCaught = true;
 	} catch (const UTFail &fail) {
-		cout << fail << endl;
-		wasCaught = true;
+		throw;
 	} catch (const JulianException &je) {
 		cout << je.what() << endl;
 		wasCaught = true;
@@ -454,8 +451,7 @@ void TestDatabase::Test8() {
 		cout << de << endl;
 		wasCaught = true;
 	} catch (const UTFail &fail) {
-		cout << fail << endl;
-		wasCaught = true;
+		throw;
 	} catch (...) { 
 		cout << "random exception caught" << endl;
 		wasCaught = true;
@@ -476,14 +472,146 @@ void TestDatabase::Test9() {
 		cout << de << endl;
 		wasCaught = true;
 	} catch (const UTFail &fail) {
-		cout << fail << endl;
-		wasCaught = true;
+		throw;
 	} catch (...) { 
 		cout << "random exception caught" << endl;
 		wasCaught = true;
 	}
 
 	UTASSERT(! wasCaught);	
+}
+
+void TestDatabase::Test10() {
+	cout << __PRETTY_FUNCTION__ << endl;
+	bool wasCaught = false;
+	try {
+		Database db ("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		Statement stmt(db, "SELECT EMAIL, CREATE_DATE FROM CUSTOMER WHERE CREATE_DATE = ?");
+
+		Julian createDate(2006, 02, 14, 22, 04, 36, 0);
+		stmt << Nullable<Julian>(createDate) << execute << fetch;
+
+		UTEQUALS(stmt.NumberOfReturnedRows(), 271);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		throw;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
+	} catch (...) {
+		cout << "random failure" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);
+}
+
+void TestDatabase::Test10AdHoc() {
+	cout << __PRETTY_FUNCTION__ << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db ("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		AdhocStatement stmt(db, "SELECT EMAIL, CREATE_DATE FROM CUSTOMER WHERE CREATE_DATE = ?");
+
+		Julian createDate(2006, 02, 14, 22, 04, 36, 0);
+		stmt << Nullable<Julian>(createDate) << execute << fetch;
+
+		UTASSERT(stmt.NumberOfReturnedRows() == 271);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		throw;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
+	} catch (...) {
+		cout << "random failure" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);
+}
+
+void TestDatabase::Test11() {
+	cout << __PRETTY_FUNCTION__ << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db ("localhost", "root", "", "sakila", 0, NULL, 0);
+
+		bool stmtCaught = false;
+		try {
+			Statement stmt(db, "SELECT EMAIL, CREATE_DATE FROM CUSTOMER WHERE CREATE_DATE = ?");
+		} catch (const DatabaseException &de) {
+			stmtCaught = true;
+			std::stringstream ss;
+			ss << de << endl;
+			char line[512];
+			ss.getline(line, 512);
+
+			UTASSERT(strcmp(line, "Error in Statement::Prepare ERROR 0(----) Database is not connected") == 0);
+		}
+
+		UTASSERT(stmtCaught);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		throw;
+	} catch (...) {
+		cout << "random failure" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);
+}
+
+void TestDatabase::Test11AdHoc() {
+	cout << __PRETTY_FUNCTION__ << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db ("localhost", "root", "", "sakila", 0, NULL, 0);
+
+		bool stmtCaught = false;
+		try {
+			Statement stmt(db, "SELECT EMAIL, CREATE_DATE FROM CUSTOMER WHERE CREATE_DATE = ?");
+		} catch (const DatabaseException &de) {
+			stmtCaught = true;
+			std::stringstream ss;
+			ss << de << endl;
+			char line[512];
+			ss.getline(line, 512);
+
+			UTASSERT(strcmp(line, "Error in Statement::Prepare ERROR 0(----) Database is not connected") == 0);
+		}
+
+		UTASSERT(stmtCaught);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		throw;
+	} catch (...) {
+		cout << "random failure" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);
 }
 
 int TestDatabase::RunSpecificTest(DatabaseMemberPointer test) {
@@ -506,6 +634,8 @@ int TestDatabase::RunTests(bool embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test1);
 		failures += RunSpecificTest(&TestDatabase::Test2AdHoc);
 		failures += RunSpecificTest(&TestDatabase::Test2AdHoc2);
+		failures += RunSpecificTest(&TestDatabase::Test10AdHoc);
+		failures += RunSpecificTest(&TestDatabase::Test11AdHoc);
 	} else {
 		failures += RunSpecificTest(&TestDatabase::Test1);
 		failures += RunSpecificTest(&TestDatabase::Test2AdHoc);
@@ -518,6 +648,8 @@ int TestDatabase::RunTests(bool embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test7);
 		failures += RunSpecificTest(&TestDatabase::Test8);
 		failures += RunSpecificTest(&TestDatabase::Test9);
+		failures += RunSpecificTest(&TestDatabase::Test10);
+		failures += RunSpecificTest(&TestDatabase::Test11);
 	}
 	return failures;
 }

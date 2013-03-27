@@ -60,16 +60,22 @@ void AdhocParameter::SetData(const Julian &julian) {
 	GregorianBreakdown data = julian.to_gregorian(0);
 	
 	if (julian.Type() == TimeType::DateTime) {
-		_data << setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day << " "
-		      << setw(2) << data.hour << ":" << setw(2) << data.minute << ":" << setw(2) << data.second << "."
-		      << setw(6) << data.millisecond * 1000;
+		_data << "'" <<  setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day << " "
+		      << setw(2) << data.hour << ":" << setw(2) << data.minute << ":" << setw(2) << data.second;
+		if (data.millisecond > 0) {
+		      _data << "." << setw(6) << data.millisecond * 1000;
+		}
+		_data << setfill(' ') << "'";
 	} else if (julian.Type() == TimeType::Date) {
-		_data << setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day;
+		_data << "'" << setfill('0') << setw(4) << data.year << "-" << setw(2) << data.month << "-" << setw(2) << data.day << setfill(' ') << "'";
 	} else if (julian.Type() == TimeType::Time) {
 		unsigned long hours = data.day * 24 + data.hour;
-		_data << setfill('0') 
-		      << setw(2) << hours << ":" << setw(2) << data.minute << ":" << setw(2) << data.second << "." 
-		      << setw(6) << data.millisecond * 1000;
+		_data << "'" << setfill('0') 
+		      << setw(2) << hours << ":" << setw(2) << data.minute << ":" << setw(2) << data.second;
+		if (data.millisecond > 0) {
+		      _data << "." << setw(6) << data.millisecond * 1000;
+		}
+		_data << "'" << setfill(' ');
 	}
 }
 
