@@ -95,9 +95,9 @@ std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb) {
 	if (gb.time_type != TimeType::Time) {
 		int year = gb.year;
 		string era = "";
-		if (year < 0) {
+		if (year <= 0) {
 			era = "BCE ";
-			year = -year;
+			year = (-year) + 1;
 		}
 
 		out << setfill(' ') << era << year << "-" << setfill('0') << setw(2) << gb.month << "-" << setw(2) << gb.day;
@@ -196,6 +196,14 @@ double Julian::calculate_jdn(int year, unsigned int month, unsigned int day) {
 double Julian::calculate_time(unsigned int hour, unsigned int minute, unsigned int second, unsigned int ms) {
 	double result = (((double) hour)  / 24) + (((double) minute) / 1440) +
 			(((double) second) / 86400) + (((double) ms) / 86400000);
+	return result;
+}
+
+DayOfWeek Julian::Weekday(int minutes_west_utc) const {
+	double adjJulian = _julian - (((double) minutes_west_utc) / 1440);
+	int J = (int) (adjJulian + 0.5);
+
+	DayOfWeek result = static_cast<DayOfWeek>((J + 1) % 7);
 	return result;
 }
 

@@ -172,8 +172,20 @@ void TestJulian::Test6() {
 	ss << bc << endl;
 	char line[512];
 	ss.getline(line, 512);
-	UTASSERT(strcmp(line, "BCE 43-01-15") == 0);	
+	UTASSERT(strcmp(line, "BCE 44-01-15") == 0);	
 
+	Julian year1(1, 1, 1, 0, 0, 0, 0);
+	UTASSERT(1721425.499 < year1.Value() && year1.Value() < 1721425.501);
+
+	Julian j2(1721424.5, TimeType::Date);
+	GregorianBreakdown gb = j2.to_gregorian(0);
+	std::stringstream s2;
+	s2 << gb << endl;
+	s2.getline(line, 512);
+	UTASSERT(strcmp(line, "BCE 1-12-31") == 0);
+
+	Julian today(2013, 03, 29, 12, 0, 0, 0);
+	UTASSERT(today.Weekday(0) == DayOfWeek::Friday);
 }
 
 void TestJulian::Test7() {

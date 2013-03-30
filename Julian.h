@@ -30,6 +30,8 @@ namespace MySQLWrap {
 		MYSQL_TIME to_mysql_time() const;
 	};
 
+	enum class DayOfWeek : uint8_t { Sunday = 0, Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5, Saturday = 6 };
+
 	std::ostream &operator<<(std::ostream &out, const GregorianBreakdown &gb);
 
 	class Julian {
@@ -46,6 +48,7 @@ namespace MySQLWrap {
 		double Value() const;
 		TimeType Type() const;
 		GregorianBreakdown to_gregorian(int minutes_west_utc) const;
+		DayOfWeek Weekday(int minutes_west_utc) const;
 	
 	protected:
 		static double calculate_utc(int year, unsigned int month, unsigned int day, 

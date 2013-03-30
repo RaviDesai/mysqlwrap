@@ -13,34 +13,42 @@ AdhocParameter::AdhocParameter() {
 }
 
 void AdhocParameter::SetData(const unsigned char data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const char data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const unsigned short data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const short data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const unsigned long data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const long data) {
+	_isNull = false;
 	_data << std::dec << data;
 }
 
 void AdhocParameter::SetData(const std::string &data) {
+	_isNull = false;
 	_data << "'" << data << "'";
 }
 
 void AdhocParameter::SetData(const Binary &data) {
+	_isNull = false;
 	char buff[data.BufferLength() * 2 + 1];
 	if (mysql_hex_string(buff, (const char *)data.Buffer(), data.BufferLength()) != data.BufferLength() * 2) {
 		throw DatabaseException("Error in AdhocParameter::SetData", 0, "----", "mysql_hex_string returned the wrong size string");
@@ -49,14 +57,17 @@ void AdhocParameter::SetData(const Binary &data) {
 }
 
 void AdhocParameter::SetData(const float data) {
+	_isNull = false;
 	_data << data;
 }
 
 void AdhocParameter::SetData(const double data) {
+	_isNull = false;
 	_data << data;
 }
 
 void AdhocParameter::SetData(const Julian &julian) {
+	_isNull = false;
 	GregorianBreakdown data = julian.to_gregorian(0);
 	
 	if (julian.Type() == TimeType::DateTime) {
@@ -80,7 +91,7 @@ void AdhocParameter::SetData(const Julian &julian) {
 }
 
 std::string AdhocParameter::Get() const {
-	return _data.str();
+	return (_isNull) ? "NULL" : _data.str();
 }
 
 }
