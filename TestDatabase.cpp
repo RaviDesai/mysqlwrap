@@ -614,6 +614,52 @@ void TestDatabase::Test11AdHoc() {
 	UTASSERT(! wasCaught);
 }
 
+void TestDatabase::Test12() {
+	cout << __PRETTY_FUNCTION__ << endl;
+
+	bool wasCaught = false;
+	try {
+		Database db ("localhost", "root", "", "sakila", 0, NULL, 0);
+		db.Connect();
+
+		bool stmtCaught = false;
+		try {
+			Statement stmt(db, "SELECT ADDRESS, ADDRESS2 FROM ADDRESS WHERE ADDRESS2 = ?");
+			Nullable<string> addr1;
+			Nullable<string> addr2;
+
+			int count = 0;
+			UTASSERT(stmt << addr2 << execute);
+			while(stmt << fetch) {
+				stmt >> addr1 >> addr2;
+				UTASSERT(!addr2.HasValue());
+				count++;
+			}
+
+			UTASSERT(count == 0);
+
+		} catch (const DatabaseException &de) {
+			cout << de << endl;
+			stmtCaught = true;
+		}
+
+		UTASSERT(! stmtCaught);
+	} catch (const DatabaseException &de) {
+		cout << de << endl;
+		wasCaught = true;
+	} catch (const JulianException &je) {
+		cout << je.what() << endl;
+		wasCaught = true;
+	} catch (const UTFail &fail) {
+		throw;
+	} catch (...) {
+		cout << "random failure" << endl;
+		wasCaught = true;
+	}
+
+	UTASSERT(! wasCaught);
+}
+
 int TestDatabase::RunSpecificTest(DatabaseMemberPointer test) {
 	int failures = 0;
 	try {
@@ -650,6 +696,7 @@ int TestDatabase::RunTests(bool embedded) {
 		failures += RunSpecificTest(&TestDatabase::Test9);
 		failures += RunSpecificTest(&TestDatabase::Test10);
 		failures += RunSpecificTest(&TestDatabase::Test11);
+		failures += RunSpecificTest(&TestDatabase::Test12);
 	}
 	return failures;
 }
