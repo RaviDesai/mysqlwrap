@@ -14,20 +14,21 @@
 
 namespace MySQLWrap {
 
-	class AdhocStatement {
+	class AdhocStatement : public IStatement {
 	public:
 		AdhocStatement(Database &db, const std::string &sqlStatement); 
 		AdhocStatement(const AdhocStatement &copy);
 		virtual ~AdhocStatement();
 
-		void Execute();
-		void ResetParameters();
-		bool FetchNextRow();
-		bool Eof();
-		unsigned long long NumberOfAffectedRows();
-		operator bool();
-		unsigned long long NumberOfReturnedRows();
-		unsigned int RemainingParameters();
+		virtual unsigned long ParameterCount();
+		virtual unsigned long RemainingParameters();
+		virtual void Execute();
+		virtual void ResetParameters();
+		virtual bool FetchNextRow();
+		virtual bool Eof();
+		virtual unsigned long long NumberOfAffectedRows();
+		virtual operator bool();
+		virtual unsigned long long NumberOfReturnedRows();
 
 		Nullable<char> GetTinyDataInRow(unsigned int column);
 		Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
@@ -41,32 +42,32 @@ namespace MySQLWrap {
 		Nullable<float> GetFloatDataInRow(unsigned int column);
 		Nullable<double> GetDoubleDataInRow(unsigned int column);
 
-		template<class X> void AssignNextParameter(const Nullable<X> &param) {
-			AdhocParameter *buffer = new AdhocParameter();
-			if (param.HasValue()) {
-				buffer->SetData(param.const_deref());
-			}
-			AssignNextParameter(buffer);
-		}
+		virtual void AssignNextParameter(const Nullable<std::string> &data);
+		virtual void AssignNextParameter(const Nullable<char> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned char> &data);
+		virtual void AssignNextParameter(const Nullable<short int> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned short int> &data);
+		virtual void AssignNextParameter(const Nullable<int> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned int> &data);
+		virtual void AssignNextParameter(const Nullable<Julian> &data);
+		virtual void AssignNextParameter(const Nullable<Binary> &data);
+		virtual void AssignNextParameter(const Nullable<float> &data);
+		virtual void AssignNextParameter(const Nullable<double> &data);
 
-		template <class X> AdhocStatement &operator>>(Nullable<X> &data) {
-			GetDataInRow(GetNextDataColumn(), data);
-			return *this;
-		}
+		virtual void GetDataInRow(unsigned int column, Nullable<std::string> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<char> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned char> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<short int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<Julian> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<Binary> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<float> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<double> &data);
+
 	protected:
-		void GetDataInRow(unsigned int column, Nullable<std::string> &data);
-		void GetDataInRow(unsigned int column, Nullable<char> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned char> &data);
-		void GetDataInRow(unsigned int column, Nullable<short int> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
-		void GetDataInRow(unsigned int column, Nullable<int> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
-		void GetDataInRow(unsigned int column, Nullable<Julian> &data);
-		void GetDataInRow(unsigned int column, Nullable<Binary> &data);
-		void GetDataInRow(unsigned int column, Nullable<float> &data);
-		void GetDataInRow(unsigned int column, Nullable<double> &data);
-
-		unsigned int GetNextDataColumn();
+		virtual unsigned int GetNextDataColumn();
 		void StoreSqlStatement(const std::string &sqlStatement);
 
 	private:
@@ -93,13 +94,4 @@ namespace MySQLWrap {
 		unsigned int _numberParams;
 		std::vector<AdhocParameter*> _params;
 	};
-
-	AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel&);
-	AdhocStatement &operator<<(AdhocStatement &stmt, const FetchSentinel&);
-	AdhocStatement &operator<<(AdhocStatement &stmt, const ResetSentinel&);
-
-	template <class X> AdhocStatement &operator<<(AdhocStatement &stmt, const Nullable<X> &param) {
-		stmt.AssignNextParameter(param);
-		return stmt;
-	}
 }

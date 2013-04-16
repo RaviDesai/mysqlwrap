@@ -32,12 +32,12 @@ void AdhocParameter::SetData(const short data) {
 	_data << std::dec << data;
 }
 
-void AdhocParameter::SetData(const unsigned long data) {
+void AdhocParameter::SetData(const unsigned int data) {
 	_isNull = false;
 	_data << std::dec << data;
 }
 
-void AdhocParameter::SetData(const long data) {
+void AdhocParameter::SetData(const int data) {
 	_isNull = false;
 	_data << std::dec << data;
 }

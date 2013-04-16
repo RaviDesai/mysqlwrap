@@ -82,7 +82,11 @@ void AdhocStatement::ScanForInsertions() {
 	}
 }
 
-unsigned int AdhocStatement::RemainingParameters() {
+unsigned long AdhocStatement::ParameterCount() {
+	return _numberParams;
+}
+
+unsigned long AdhocStatement::RemainingParameters() {
 	return _numberParams - _params.size();	
 }
 
@@ -171,6 +175,95 @@ void AdhocStatement::ResetParameters() {
 		delete buf;
 	}	
 }
+
+void AdhocStatement::AssignNextParameter(const Nullable<std::string> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<char> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<unsigned char> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<short int> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<unsigned short int> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<int> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<unsigned int> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<Julian> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<Binary> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<float> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
+void AdhocStatement::AssignNextParameter(const Nullable<double> &param) {
+	AdhocParameter *buffer = new AdhocParameter();
+	if (param.HasValue()) {
+		buffer->SetData(param.const_deref());
+	}
+	AssignNextParameter(buffer);
+}
+
 
 void AdhocStatement::AssignNextParameter(AdhocParameter *buffer) {
 	if (buffer == NULL) { 
@@ -488,16 +581,6 @@ unsigned int AdhocStatement::GetNextDataColumn() {
 	unsigned int result = _currentColumn;
 	_currentColumn++;
 	return result;
-}
-
-AdhocStatement &operator<<(AdhocStatement &stmt, const ExecuteSentinel &exec) {
-	stmt.Execute();
-	return stmt;
-}
-
-AdhocStatement &operator<<(AdhocStatement &stmt, const FetchSentinel &fetch) {
-	stmt.FetchNextRow();
-	return stmt;
 }
 
 }

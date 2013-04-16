@@ -210,10 +210,102 @@ Statement::~Statement() {
 	ClearResults();
 }
 
+unsigned long Statement::RemainingParameters() {
+	return ParameterCount() - _params.size();
+}
+
 unsigned long Statement::ParameterCount() {
 	return mysql_stmt_param_count(_stmt);
 }
 	
+void Statement::AssignNextParameter(const Nullable<Binary> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(Binary)));
+	} else {
+		AssignNextParameter(new ParamBuffer(param.const_deref()));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<std::string> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(std::string)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<unsigned char> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(unsigned char)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<char> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(char)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<unsigned short int> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(unsigned short int)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<short int> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(short int)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<unsigned int> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(unsigned int)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<int> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(int)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<float> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(float)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<double> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(double)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
+void Statement::AssignNextParameter(const Nullable<Julian> &param) {
+	if (! param.HasValue()) {
+		AssignNextParameter(new ParamBuffer(typeid(Julian)));
+	} else {
+		AssignNextParameter(new ParamBuffer(*param));
+	}
+}
+
 void Statement::AssignNextParameter(ParamBuffer *buffer) {
 	if (buffer == NULL) { 
 		throw DatabaseException("Error in Statement::AssignNextParameter", 0, "----", "Buffer cannot be null");
@@ -654,27 +746,6 @@ unsigned int Statement::GetNextDataColumn() {
 	unsigned int result = _currentColumn;
 	_currentColumn++;
 	return result;
-}
-
-ExecuteSentinel::ExecuteSentinel() {}
-
-Statement &operator<<(Statement &stmt, const ExecuteSentinel&) {
-	stmt.Execute();
-	return stmt;
-}
-
-FetchSentinel::FetchSentinel() {}
-
-Statement &operator<<(Statement &stmt, const FetchSentinel&) {
-	stmt.FetchNextRow();
-	return stmt;
-}
-
-ResetSentinel::ResetSentinel() {}
-
-Statement &operator<<(Statement &stmt, const ResetSentinel&) {
-	stmt.ResetParameters();
-	return stmt;
 }
 
 }

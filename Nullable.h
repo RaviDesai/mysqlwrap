@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <iostream>
+#include <utility>
 
 using namespace std;
 
@@ -43,6 +44,12 @@ public:
 	}
 
 	Nullable &operator=(const T& value) {
+		_storage = value;
+		_hasValue = true;
+		return *this;
+	}
+
+	Nullable &operator=(T& value) {
 		_storage = value;
 		_hasValue = true;
 		return *this;

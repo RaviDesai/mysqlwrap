@@ -18,8 +18,8 @@ namespace MySQLWrap {
 		void SetData(const char data);
 		void SetData(const unsigned short int data);
 		void SetData(const short int data);
-		void SetData(const unsigned long data);
-		void SetData(const long data);
+		void SetData(const unsigned int data);
+		void SetData(const int data);
 		void SetData(const std::string &data);
 		void SetData(const Julian &data);
 		void SetData(const Binary &data);

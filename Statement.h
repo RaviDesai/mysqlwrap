@@ -4,82 +4,65 @@
 #include "Database.h"
 #include "ParamBuffer.h"
 #include "Nullable.h"
+#include "IStatement.h"
 #include <mysql_time.h>
 
 namespace MySQLWrap {
 
-	class ExecuteSentinel {
-	public:
-		ExecuteSentinel();
-	};
-	const ExecuteSentinel execute;
-
-	class FetchSentinel {
-	public:
-		FetchSentinel();
-	};
-	const FetchSentinel fetch;
-
-	class ResetSentinel {
-	public:
-		ResetSentinel();
-	};
-	const ResetSentinel reset;
-
-	class Statement {
+	class Statement : public IStatement {
 	public:
 		Statement(Database &db, const std::string &sqlStatement); 
 		Statement(const Statement &);
 		virtual ~Statement();
 
-		template<class X> void AssignNextParameter(const Nullable<X> &param) {
-			if (! param.HasValue()) {
-				AssignNextParameter(new ParamBuffer(typeid(X)));
-			} else {
-				AssignNextParameter(new ParamBuffer(*param));
-			}
-		};
+		virtual unsigned long ParameterCount();
+		virtual unsigned long RemainingParameters();
+		virtual void ResetParameters();
+		virtual void Execute();
+		virtual bool FetchNextRow();
+		virtual bool Eof();
+		virtual unsigned long long NumberOfAffectedRows();
+		virtual operator bool();
+		virtual unsigned long long NumberOfReturnedRows();
 
-		unsigned long ParameterCount();
-		void ResetParameters();
-		void Execute();
-		bool FetchNextRow();
-		bool Eof();
-		unsigned long long NumberOfAffectedRows();
-		operator bool();
-		unsigned long long NumberOfReturnedRows();
+		virtual Nullable<char> GetTinyDataInRow(unsigned int column);
+		virtual Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
+		virtual Nullable<short int> GetShortDataInRow(unsigned int column);
+		virtual Nullable<unsigned short int> GetUShortDataInRow(unsigned int column);
+		virtual Nullable<int> GetLongDataInRow(unsigned int column);
+		virtual Nullable<unsigned int> GetULongDataInRow(unsigned int column);
+		virtual Nullable<Julian> GetTimeDataInRow(unsigned int column);
+		virtual Nullable<std::string> GetStringDataInRow(unsigned int column);
+		virtual Nullable<Binary> GetBinaryDataInRow(unsigned int column);
+		virtual Nullable<float> GetFloatDataInRow(unsigned int column);
+		virtual Nullable<double> GetDoubleDataInRow(unsigned int column);
 
-		Nullable<char> GetTinyDataInRow(unsigned int column);
-		Nullable<unsigned char> GetUTinyDataInRow(unsigned int column);
-		Nullable<short int> GetShortDataInRow(unsigned int column);
-		Nullable<unsigned short int> GetUShortDataInRow(unsigned int column);
-		Nullable<int> GetLongDataInRow(unsigned int column);
-		Nullable<unsigned int> GetULongDataInRow(unsigned int column);
-		Nullable<Julian> GetTimeDataInRow(unsigned int column);
-		Nullable<std::string> GetStringDataInRow(unsigned int column);
-		Nullable<Binary> GetBinaryDataInRow(unsigned int column);
-		Nullable<float> GetFloatDataInRow(unsigned int column);
-		Nullable<double> GetDoubleDataInRow(unsigned int column);
+		virtual void AssignNextParameter(const Nullable<std::string> &data);
+		virtual void AssignNextParameter(const Nullable<char> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned char> &data);
+		virtual void AssignNextParameter(const Nullable<short int> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned short int> &data);
+		virtual void AssignNextParameter(const Nullable<int> &data);
+		virtual void AssignNextParameter(const Nullable<unsigned int> &data);
+		virtual void AssignNextParameter(const Nullable<Julian> &data);
+		virtual void AssignNextParameter(const Nullable<Binary> &data);
+		virtual void AssignNextParameter(const Nullable<float> &data); 
+		virtual void AssignNextParameter(const Nullable<double> &data);
 
+		virtual void GetDataInRow(unsigned int column, Nullable<std::string> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<char> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned char> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<short int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<Julian> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<Binary> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<float> &data);
+		virtual void GetDataInRow(unsigned int column, Nullable<double> &data);
 
-		template <class X> Statement &operator>>(Nullable<X> &data) {
-			GetDataInRow(GetNextDataColumn(), data);
-			return *this;
-		}
 	protected:
-		void GetDataInRow(unsigned int column, Nullable<std::string> &data);
-		void GetDataInRow(unsigned int column, Nullable<char> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned char> &data);
-		void GetDataInRow(unsigned int column, Nullable<short int> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned short int> &data);
-		void GetDataInRow(unsigned int column, Nullable<int> &data);
-		void GetDataInRow(unsigned int column, Nullable<unsigned int> &data);
-		void GetDataInRow(unsigned int column, Nullable<Julian> &data);
-		void GetDataInRow(unsigned int column, Nullable<Binary> &data);
-		void GetDataInRow(unsigned int column, Nullable<float> &data);
-		void GetDataInRow(unsigned int column, Nullable<double> &data);
-
-		unsigned int GetNextDataColumn();
+		virtual unsigned int GetNextDataColumn();
 
 	private:
 		void AssignNextParameter(ParamBuffer *buffer);
@@ -104,14 +87,5 @@ namespace MySQLWrap {
 		std::vector<ParamBuffer*> _params;
 		std::vector<ParamBuffer*> _resultParams;
 	};
-
-	Statement &operator<<(Statement &stmt, const ExecuteSentinel&);
-	Statement &operator<<(Statement &stmt, const FetchSentinel&);
-	Statement &operator<<(Statement &stmt, const ResetSentinel&);
-
-	template <class X> Statement &operator<<(Statement &stmt, const Nullable<X> &param) {
-		stmt.AssignNextParameter(param);
-		return stmt;
-	}
 
 }
