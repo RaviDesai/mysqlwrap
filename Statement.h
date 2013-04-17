@@ -64,6 +64,15 @@ namespace MySQLWrap {
 	protected:
 		virtual unsigned int GetNextDataColumn();
 
+		template<class X>
+		void AssignNextParameterTemplate(const Nullable<X> &param) {
+			if (! param.HasValue()) {
+				AssignNextParameter(new ParamBuffer(typeid(Binary)));
+			} else {
+				AssignNextParameter(new ParamBuffer(param.const_deref()));
+			}
+		}
+
 	private:
 		void AssignNextParameter(ParamBuffer *buffer);
 		void Prepare();

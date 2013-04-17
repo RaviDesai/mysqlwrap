@@ -70,6 +70,15 @@ namespace MySQLWrap {
 		virtual unsigned int GetNextDataColumn();
 		void StoreSqlStatement(const std::string &sqlStatement);
 
+		template<class X>
+		void AssignNextParameterTemplate(const Nullable<X> &param) {
+			AdhocParameter *buffer = new AdhocParameter();
+			if (param.HasValue()) {
+				buffer->SetData(param.const_deref());
+			}
+			AssignNextParameter(buffer);
+		}
+
 	private:
 		void Prepare();
 		std::string ReplaceInsertions();

@@ -219,91 +219,47 @@ unsigned long Statement::ParameterCount() {
 }
 	
 void Statement::AssignNextParameter(const Nullable<Binary> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(Binary)));
-	} else {
-		AssignNextParameter(new ParamBuffer(param.const_deref()));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<std::string> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(std::string)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<unsigned char> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(unsigned char)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<char> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(char)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<unsigned short int> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(unsigned short int)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<short int> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(short int)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<unsigned int> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(unsigned int)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<int> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(int)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<float> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(float)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<double> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(double)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(const Nullable<Julian> &param) {
-	if (! param.HasValue()) {
-		AssignNextParameter(new ParamBuffer(typeid(Julian)));
-	} else {
-		AssignNextParameter(new ParamBuffer(*param));
-	}
+	AssignNextParameterTemplate(param);
 }
 
 void Statement::AssignNextParameter(ParamBuffer *buffer) {

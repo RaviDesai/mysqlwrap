@@ -177,91 +177,47 @@ void AdhocStatement::ResetParameters() {
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<std::string> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<char> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<unsigned char> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<short int> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<unsigned short int> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<int> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<unsigned int> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<Julian> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<Binary> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<float> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 void AdhocStatement::AssignNextParameter(const Nullable<double> &param) {
-	AdhocParameter *buffer = new AdhocParameter();
-	if (param.HasValue()) {
-		buffer->SetData(param.const_deref());
-	}
-	AssignNextParameter(buffer);
+	AssignNextParameterTemplate(param);
 }
 
 
