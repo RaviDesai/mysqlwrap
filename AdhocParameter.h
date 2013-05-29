@@ -27,6 +27,7 @@ namespace MySQLWrap {
 		void SetData(const double data);
 
 		std::string Get() const;
+		bool IsNull() const;
 	private:
 		bool _isNull;
 		std::stringstream _data;

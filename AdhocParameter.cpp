@@ -12,6 +12,10 @@ AdhocParameter::AdhocParameter() {
 	_isNull = true;
 }
 
+bool AdhocParameter::IsNull() const {
+	return _isNull;
+}
+
 void AdhocParameter::SetData(const unsigned char data) {
 	_isNull = false;
 	_data << std::dec << data;

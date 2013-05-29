@@ -8,6 +8,7 @@
 #include "TestDatabase.h"
 #include "TestImport.h"
 #include "TestJulian.h"
+#include "TestAdhocParameter.h"
 
 using namespace std;
 using namespace MySQLWrap;
@@ -39,6 +40,9 @@ int main(int argc, char** argv)
 
 	TestJulian ts5;
 	failures += ts5.RunTests();
+
+	TestAdhocParameter ts6;
+	failures += ts6.RunTests();
 
 	cout << "End Test Suite" << endl;
 
